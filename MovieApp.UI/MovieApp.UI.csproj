@@ -26,4 +26,10 @@
   <ItemGroup>
     <ProjectReference Include="..\MovieApp.Core\MovieApp.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\mock-data.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

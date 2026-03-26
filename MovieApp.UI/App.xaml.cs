@@ -15,6 +15,9 @@ namespace MovieApp.UI;
 public partial class App : Application
 {
     private Window? _window;
+    private readonly string _connString = "Server=(localdb)\\mssqllocaldb;Database=MovieApp;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=2;";
+    private readonly string _mockDataPath;
+    private readonly bool _useMockData;
 
     /// <summary>Gets the service provider for dependency injection.</summary>
     public static IServiceProvider Services { get; private set; } = null!;
@@ -25,10 +28,12 @@ public partial class App : Application
     public App()
     {
         this.InitializeComponent();
+        _mockDataPath = Path.Combine(AppContext.BaseDirectory, "Data", "mock-data.json");
+        _useMockData = !CanConnectToDatabase(_connString);
 
         // Configure services
         var serviceCollection = new ServiceCollection();
-        ConfigureServices(serviceCollection);
+        ConfigureServices(serviceCollection, _connString, _useMockData, _mockDataPath);
         Services = serviceCollection.BuildServiceProvider();
     }
 
@@ -38,8 +43,9 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-        using (var scope = Services.CreateScope())
+        if (!_useMockData)
         {
+            using var scope = Services.CreateScope();
             var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
             initializer.EnsureCreatedAndSeeded();
         }
@@ -53,28 +59,39 @@ public partial class App : Application
     /// Configures all services for dependency injection.
     /// </summary>
     /// <param name="services">The service collection.</param>
-    private static void ConfigureServices(IServiceCollection services)
+    private static void ConfigureServices(IServiceCollection services, string connString, bool useMockData, string mockDataPath)
     {
-        string connString = "Server=(localdb)\\mssqllocaldb;Database=MovieApp;Trusted_Connection=True;TrustServerCertificate=True;";
+        if (useMockData)
+        {
+            services.AddSingleton(sp => new MockAppService(mockDataPath));
+            services.AddScoped<ICatalogService>(sp => sp.GetRequiredService<MockAppService>());
+            services.AddScoped<IReviewService>(sp => sp.GetRequiredService<MockAppService>());
+            services.AddScoped<IPointService>(sp => sp.GetRequiredService<MockAppService>());
+            services.AddScoped<IBadgeService>(sp => sp.GetRequiredService<MockAppService>());
+            services.AddScoped<IBattleService>(sp => sp.GetRequiredService<MockAppService>());
+            services.AddScoped<ICommentService>(sp => sp.GetRequiredService<MockAppService>());
+        }
+        else
+        {
+            services.AddTransient<MovieRepository>(sp => new MovieRepository(connString));
+            services.AddTransient<UserRepository>(sp => new UserRepository(connString));
+            services.AddTransient<ReviewRepository>(sp => new ReviewRepository(connString));
+            services.AddTransient<CommentRepository>(sp => new CommentRepository(connString));
+            services.AddTransient<BattleRepository>(sp => new BattleRepository(connString));
+            services.AddTransient<BadgeRepository>(sp => new BadgeRepository(connString));
+            services.AddTransient<BetRepository>(sp => new BetRepository(connString));
+            services.AddTransient<UserStatsRepository>(sp => new UserStatsRepository(connString));
+            services.AddTransient<UserBadgeRepository>(sp => new UserBadgeRepository(connString));
+            services.AddTransient<DatabaseInitializer>(sp => new DatabaseInitializer(connString));
 
-        services.AddTransient<MovieRepository>(sp => new MovieRepository(connString));
-        services.AddTransient<UserRepository>(sp => new UserRepository(connString));
-        services.AddTransient<ReviewRepository>(sp => new ReviewRepository(connString));
-        services.AddTransient<CommentRepository>(sp => new CommentRepository(connString));
-        services.AddTransient<BattleRepository>(sp => new BattleRepository(connString));
-        services.AddTransient<BadgeRepository>(sp => new BadgeRepository(connString));
-        services.AddTransient<BetRepository>(sp => new BetRepository(connString));
-        services.AddTransient<UserStatsRepository>(sp => new UserStatsRepository(connString));
-        services.AddTransient<UserBadgeRepository>(sp => new UserBadgeRepository(connString));
-        services.AddTransient<DatabaseInitializer>(sp => new DatabaseInitializer(connString));
-
-        // Core services
-        services.AddScoped<ICatalogService, CatalogService>();
-        services.AddScoped<IReviewService, ReviewService>();
-        services.AddScoped<IPointService, PointService>();
-        services.AddScoped<IBadgeService, BadgeService>();
-        services.AddScoped<IBattleService, BattleService>();
-        services.AddScoped<ICommentService, CommentService>();
+            // Core services
+            services.AddScoped<ICatalogService, CatalogService>();
+            services.AddScoped<IReviewService, ReviewService>();
+            services.AddScoped<IPointService, PointService>();
+            services.AddScoped<IBadgeService, BadgeService>();
+            services.AddScoped<IBattleService, BattleService>();
+            services.AddScoped<ICommentService, CommentService>();
+        }
 
         // External review service (HttpClient singleton)
         services.AddHttpClient<ExternalReviewService>();
@@ -85,5 +102,19 @@ public partial class App : Application
         services.AddTransient<BattleViewModel>();
         services.AddTransient<ForumViewModel>();
         services.AddTransient<MainWindowViewModel>();
+    }
+
+    private static bool CanConnectToDatabase(string connectionString)
+    {
+        try
+        {
+            using var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString);
+            connection.Open();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
