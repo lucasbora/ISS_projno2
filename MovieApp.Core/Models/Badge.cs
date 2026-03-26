@@ -1,6 +1,4 @@
 #nullable enable
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MovieApp.Core.Models;
 
@@ -10,13 +8,9 @@ namespace MovieApp.Core.Models;
 public class Badge
 {
     /// <summary>Gets or sets the unique badge identifier.</summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int BadgeId { get; set; }
 
     /// <summary>Gets or sets the badge name.</summary>
-    [Required]
-    [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the criteria value for earning this badge.</summary>
