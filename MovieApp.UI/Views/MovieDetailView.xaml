@@ -3,6 +3,7 @@
     x:Class="MovieApp.UI.Views.MovieDetailView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="using:MovieApp.UI.Views.Components"
     xmlns:models="using:MovieApp.Core.Models">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="20">
@@ -142,9 +143,8 @@
 
                 <StackPanel Visibility="{x:Bind ViewModel.HasUserReview, Mode=OneWay, Converter={StaticResource BoolToVisibilityInverter}, FallbackValue=Visible}">
                     <TextBlock Text="Star Rating (0-5):" Margin="0,0,0,4"/>
-                    <Slider Minimum="0" Maximum="5" StepFrequency="0.5"
-                            Value="{x:Bind ViewModel.NewReviewRating, Mode=TwoWay}"
-                            Header="Rating"/>
+					<components:StarSlider Value="{x:Bind ViewModel.NewReviewRating, Mode=TwoWay}"
+                           HorizontalAlignment="Center" />
                     <TextBox PlaceholderText="Write your review (max 5000 characters)..."
                              Text="{x:Bind ViewModel.NewReviewContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True" TextWrapping="Wrap"
