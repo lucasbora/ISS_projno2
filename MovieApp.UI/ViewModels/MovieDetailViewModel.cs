@@ -257,7 +257,7 @@ public class MovieDetailViewModel : ViewModelBase
             Reviews.Add(review);
 
         AverageRating = await _reviewService.GetAverageRating(movie.MovieId);
-        HasUserReview = reviews.Any(r => r.UserId == _currentUserId);
+        HasUserReview = reviews.Any(r => r.User?.UserId == _currentUserId);
 
         // Load comments
         var comments = await _commentService.GetCommentsForMovie(movie.MovieId);
@@ -324,7 +324,7 @@ public class MovieDetailViewModel : ViewModelBase
     {
         if (Movie == null) return;
 
-        var userReview = Reviews.FirstOrDefault(r => r.UserId == _currentUserId);
+        var userReview = Reviews.FirstOrDefault(r => r.User?.UserId == _currentUserId);
         if (userReview == null)
         {
             StatusMessage = "You must submit a regular review first.";

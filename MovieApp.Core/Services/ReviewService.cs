@@ -1,8 +1,7 @@
 #nullable enable
-using Microsoft.EntityFrameworkCore;
-using MovieApp.Core.Data;
 using MovieApp.Core.Interfaces;
 using MovieApp.Core.Models;
+using MovieApp.Core.Repositories;
 
 namespace MovieApp.Core.Services;
 
@@ -11,17 +10,31 @@ namespace MovieApp.Core.Services;
 /// </summary>
 public class ReviewService : IReviewService
 {
-    private readonly MovieAppDbContext _context;
+    private readonly ReviewRepository _reviewRepository;
+    private readonly MovieRepository _movieRepository;
+    private readonly UserRepository _userRepository;
+    private readonly BattleRepository _battleRepository;
     private readonly IPointService _pointService;
 
     /// <summary>
     /// Initializes a new instance of <see cref="ReviewService"/>.
     /// </summary>
-    /// <param name="context">The database context.</param>
+    /// <param name="reviewRepository">The review repository.</param>
+    /// <param name="movieRepository">The movie repository.</param>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="battleRepository">The battle repository.</param>
     /// <param name="pointService">The point service for awarding points.</param>
-    public ReviewService(MovieAppDbContext context, IPointService pointService)
+    public ReviewService(
+        ReviewRepository reviewRepository,
+        MovieRepository movieRepository,
+        UserRepository userRepository,
+        BattleRepository battleRepository,
+        IPointService pointService)
     {
-        _context = context;
+        _reviewRepository = reviewRepository;
+        _movieRepository = movieRepository;
+        _userRepository = userRepository;
+        _battleRepository = battleRepository;
         _pointService = pointService;
     }
 
@@ -32,11 +45,12 @@ public class ReviewService : IReviewService
     /// <returns>A list of reviews for the movie.</returns>
     public async Task<List<Review>> GetReviewsForMovie(int movieId)
     {
-        return await _context.Reviews
-            .Include(r => r.User)
-            .Where(r => r.MovieId == movieId)
+        var reviews = _reviewRepository.GetAll()
+            .Where(r => r.Movie?.MovieId == movieId)
             .OrderByDescending(r => r.CreatedAt)
-            .ToListAsync();
+            .ToList();
+
+        return await Task.FromResult(reviews);
     }
 
     /// <summary>
@@ -50,9 +64,14 @@ public class ReviewService : IReviewService
     /// <exception cref="InvalidOperationException">Thrown on duplicate review or invalid input.</exception>
     public async Task<Review> AddReview(int userId, int movieId, float rating, string content)
     {
+        var user = _userRepository.GetById(userId)
+            ?? throw new InvalidOperationException("User not found.");
+        var movie = _movieRepository.GetById(movieId)
+            ?? throw new InvalidOperationException("Movie not found.");
+
         // Validate: one review per user per movie
-        var existing = await _context.Reviews
-            .AnyAsync(r => r.UserId == userId && r.MovieId == movieId);
+        var existing = _reviewRepository.GetAll()
+            .Any(r => r.User?.UserId == userId && r.Movie?.MovieId == movieId);
         if (existing)
             throw new InvalidOperationException("User has already reviewed this movie.");
 
@@ -70,24 +89,23 @@ public class ReviewService : IReviewService
 
         var review = new Review
         {
-            UserId = userId,
-            MovieId = movieId,
+            User = user,
+            Movie = movie,
             StarRating = rating,
             Content = content,
             CreatedAt = DateTime.UtcNow,
             IsExtraReview = false
         };
 
-        _context.Reviews.Add(review);
-        await _context.SaveChangesAsync();
+        _reviewRepository.Insert(review);
 
         // Recalculate average rating
         await RecalculateAverageRating(movieId);
 
         // Determine if movie is in an active battle
-        var isBattleMovie = await _context.Battles
-            .AnyAsync(b => b.Status == "Active" &&
-                          (b.FirstMovieId == movieId || b.SecondMovieId == movieId));
+        var isBattleMovie = _battleRepository.GetAll()
+            .Any(b => b.Status == "Active" &&
+                      (b.FirstMovie?.MovieId == movieId || b.SecondMovie?.MovieId == movieId));
 
         // Award points
         await _pointService.AddPoints(userId, movieId, isBattleMovie);
@@ -103,7 +121,7 @@ public class ReviewService : IReviewService
     /// <param name="content">The new content.</param>
     public async Task UpdateReview(int reviewId, float rating, string content)
     {
-        var review = await _context.Reviews.FindAsync(reviewId)
+        var review = _reviewRepository.GetById(reviewId)
             ?? throw new InvalidOperationException("Review not found.");
 
         if (rating < 0 || rating > 5 || (rating * 2) % 1 != 0)
@@ -117,9 +135,11 @@ public class ReviewService : IReviewService
 
         review.StarRating = rating;
         review.Content = content;
-        await _context.SaveChangesAsync();
+        _reviewRepository.Update(review);
 
-        await RecalculateAverageRating(review.MovieId);
+        var movieId = review.Movie?.MovieId
+            ?? throw new InvalidOperationException("Review movie is not available.");
+        await RecalculateAverageRating(movieId);
     }
 
     /// <summary>
@@ -128,12 +148,13 @@ public class ReviewService : IReviewService
     /// <param name="reviewId">The review identifier.</param>
     public async Task DeleteReview(int reviewId)
     {
-        var review = await _context.Reviews.FindAsync(reviewId)
+        var review = _reviewRepository.GetById(reviewId)
             ?? throw new InvalidOperationException("Review not found.");
 
-        int movieId = review.MovieId;
-        _context.Reviews.Remove(review);
-        await _context.SaveChangesAsync();
+        int movieId = review.Movie?.MovieId
+            ?? throw new InvalidOperationException("Review movie is not available.");
+        _reviewRepository.Delete(review.ReviewId);
+
         await RecalculateAverageRating(movieId);
     }
 
@@ -157,7 +178,7 @@ public class ReviewService : IReviewService
         int soundRating, string soundText, int cinRating, string cinText,
         string mainExtraText)
     {
-        var review = await _context.Reviews.FindAsync(reviewId)
+        var review = _reviewRepository.GetById(reviewId)
             ?? throw new InvalidOperationException("Review not found.");
 
         // Validate main extra text length
@@ -191,7 +212,8 @@ public class ReviewService : IReviewService
         review.Content = mainExtraText;
         review.IsExtraReview = true;
 
-        await _context.SaveChangesAsync();
+        _reviewRepository.Update(review);
+        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -201,9 +223,9 @@ public class ReviewService : IReviewService
     /// <returns>The average star rating.</returns>
     public async Task<double> GetAverageRating(int movieId)
     {
-        var reviews = await _context.Reviews
-            .Where(r => r.MovieId == movieId)
-            .ToListAsync();
+        var reviews = _reviewRepository.GetAll()
+            .Where(r => r.Movie?.MovieId == movieId)
+            .ToList();
 
         if (reviews.Count == 0)
             return 0;
@@ -216,12 +238,12 @@ public class ReviewService : IReviewService
     /// </summary>
     private async Task RecalculateAverageRating(int movieId)
     {
-        var movie = await _context.Movies.FindAsync(movieId);
+        var movie = _movieRepository.GetById(movieId);
         if (movie == null) return;
 
         var avg = await GetAverageRating(movieId);
         movie.AverageRating = avg;
-        await _context.SaveChangesAsync();
+        _movieRepository.Update(movie);
     }
 
     /// <summary>Validates a category text's length (50-2000 chars).</summary>

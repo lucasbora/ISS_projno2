@@ -87,7 +87,43 @@
                   ItemsSource="{x:Bind ViewModel.RootComments}"
                   SelectionMode="None">
             <ListView.ItemTemplate>
-                <StaticResource ResourceKey="ForumCommentTemplate"/>
+                <DataTemplate x:DataType="models:Comment">
+                    <Border Padding="12" Margin="0,2"
+                            CornerRadius="8"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                        <StackPanel>
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="SemiBold" FontSize="13">
+                                        <Run Text="User #"/>
+                                         <Run Text="{x:Bind Author.UserId}"/>
+                                    </TextBlock>
+                                    <TextBlock Text=" • " Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="{x:Bind Content}" TextWrapping="Wrap"
+                                       Margin="0,4,0,0"/>
+
+                            <!-- Reply indicator -->
+                             <TextBlock Visibility="{x:Bind ParentComment.MessageId, Converter={StaticResource NullableIntToVisibility}}"
+                                       FontSize="11" Margin="0,4,0,0"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}">
+                                <Run Text="↳ Reply to comment #"/>
+                                 <Run Text="{x:Bind ParentComment.MessageId}"/>
+                            </TextBlock>
+
+                            <!-- Reply button -->
+                            <HyperlinkButton Content="Reply"
+                                             FontSize="12"
+                                             Tag="{x:Bind MessageId}"
+                                             Click="ReplyButton_Click"/>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
 

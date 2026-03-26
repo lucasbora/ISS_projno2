@@ -1,8 +1,7 @@
 #nullable enable
-using Microsoft.EntityFrameworkCore;
-using MovieApp.Core.Data;
 using MovieApp.Core.Interfaces;
 using MovieApp.Core.Models;
+using MovieApp.Core.Repositories;
 
 namespace MovieApp.Core.Services;
 
@@ -11,15 +10,28 @@ namespace MovieApp.Core.Services;
 /// </summary>
 public class BadgeService : IBadgeService
 {
-    private readonly MovieAppDbContext _context;
+    private readonly UserBadgeRepository _userBadgeRepository;
+    private readonly BadgeRepository _badgeRepository;
+    private readonly ReviewRepository _reviewRepository;
+    private readonly MovieRepository _movieRepository;
 
     /// <summary>
     /// Initializes a new instance of <see cref="BadgeService"/>.
     /// </summary>
-    /// <param name="context">The database context.</param>
-    public BadgeService(MovieAppDbContext context)
+    /// <param name="userBadgeRepository">The user badge repository.</param>
+    /// <param name="badgeRepository">The badge repository.</param>
+    /// <param name="reviewRepository">The review repository.</param>
+    /// <param name="movieRepository">The movie repository.</param>
+    public BadgeService(
+        UserBadgeRepository userBadgeRepository,
+        BadgeRepository badgeRepository,
+        ReviewRepository reviewRepository,
+        MovieRepository movieRepository)
     {
-        _context = context;
+        _userBadgeRepository = userBadgeRepository;
+        _badgeRepository = badgeRepository;
+        _reviewRepository = reviewRepository;
+        _movieRepository = movieRepository;
     }
 
     /// <summary>
@@ -29,11 +41,12 @@ public class BadgeService : IBadgeService
     /// <returns>A list of badges the user has earned.</returns>
     public async Task<List<Badge>> GetUserBadges(int userId)
     {
-        return await _context.UserBadges
-            .Where(ub => ub.UserId == userId)
-            .Include(ub => ub.Badge)
+        var badges = _userBadgeRepository.GetAll()
+            .Where(ub => ub.User?.UserId == userId && ub.Badge is not null)
             .Select(ub => ub.Badge!)
-            .ToListAsync();
+            .ToList();
+
+        return await Task.FromResult(badges);
     }
 
     /// <summary>
@@ -42,7 +55,7 @@ public class BadgeService : IBadgeService
     /// <returns>A list of all badges.</returns>
     public async Task<List<Badge>> GetAllBadges()
     {
-        return await _context.Badges.ToListAsync();
+        return await Task.FromResult(_badgeRepository.GetAll());
     }
 
     /// <summary>
@@ -51,17 +64,17 @@ public class BadgeService : IBadgeService
     /// <param name="userId">The user identifier.</param>
     public async Task CheckAndAwardBadges(int userId)
     {
-        var existingBadgeIds = await _context.UserBadges
-            .Where(ub => ub.UserId == userId)
-            .Select(ub => ub.BadgeId)
-            .ToListAsync();
+        var existingBadgeIds = _userBadgeRepository.GetAll()
+            .Where(ub => ub.User?.UserId == userId && ub.Badge is not null)
+            .Select(ub => ub.Badge!.BadgeId)
+            .ToList();
 
-        var allBadges = await _context.Badges.ToListAsync();
+        var allBadges = _badgeRepository.GetAll();
 
-        var userReviews = await _context.Reviews
-            .Include(r => r.Movie)
-            .Where(r => r.UserId == userId)
-            .ToListAsync();
+        var userReviews = _reviewRepository.GetAll()
+            .Where(r => r.User?.UserId == userId)
+            .ToList();
+        var moviesById = _movieRepository.GetAll().ToDictionary(m => m.MovieId);
 
         int totalReviews = userReviews.Count;
         int extraReviews = userReviews.Count(r => r.IsExtraReview);
@@ -77,7 +90,9 @@ public class BadgeService : IBadgeService
 
         // Count comedy genre reviews
         int comedyReviews = userReviews.Count(r =>
-            r.Movie != null && r.Movie.Genre.Equals("Comedy", StringComparison.OrdinalIgnoreCase));
+            r.Movie is not null &&
+            moviesById.TryGetValue(r.Movie.MovieId, out var movie) &&
+            movie.Genre.Equals("Comedy", StringComparison.OrdinalIgnoreCase));
         double comedyPercentage = totalReviews > 0 ? (double)comedyReviews / totalReviews * 100 : 0;
 
         foreach (var badge in allBadges)
@@ -98,14 +113,14 @@ public class BadgeService : IBadgeService
 
             if (shouldAward)
             {
-                _context.UserBadges.Add(new UserBadge
+                _userBadgeRepository.Insert(new UserBadge
                 {
-                    UserId = userId,
-                    BadgeId = badge.BadgeId
+                    User = new User { UserId = userId },
+                    Badge = new Badge { BadgeId = badge.BadgeId }
                 });
             }
         }
 
-        await _context.SaveChangesAsync();
+        await Task.CompletedTask;
     }
 }

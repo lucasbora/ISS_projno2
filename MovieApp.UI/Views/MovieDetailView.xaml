@@ -294,7 +294,7 @@
                                     <Grid>
                                         <TextBlock FontWeight="SemiBold">
                                             <Run Text="User #"/>
-                                            <Run Text="{x:Bind UserId}"/>
+                                             <Run Text="{x:Bind User.UserId}"/>
                                         </TextBlock>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                             <TextBlock Text="⭐" Margin="0,0,4,0"/>
@@ -339,49 +339,34 @@
                             Style="{ThemeResource AccentButtonStyle}"/>
                 </Grid>
 
-                <ItemsControl ItemsSource="{x:Bind ViewModel.RootComments}"
-                              ItemTemplate="{StaticResource MovieDetailCommentTemplate}"/>
-
-                <Border x:Name="ReplyEditorBorder"
-                        Visibility="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay, Converter={StaticResource IntToVisibility}}"
-                        Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
-                        CornerRadius="8"
-                        Padding="12"
-                        Margin="0,8,0,0">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" VerticalAlignment="Center">
-                                <Run Text="Replying to comment #"/>
-                                <Run Text="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay}"/>
-                            </TextBlock>
-                            <Button Grid.Column="1"
-                                    Content="Cancel"
-                                    Command="{x:Bind ViewModel.CancelReplyCommand}"/>
-                        </Grid>
-
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0"
-                                     PlaceholderText="Write your reply..."
-                                     Text="{x:Bind ViewModel.ReplyContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     AcceptsReturn="True"
-                                     TextWrapping="Wrap"
-                                     MaxLength="10000"
-                                     Margin="0,0,8,0"/>
-                            <Button Grid.Column="1"
-                                    Content="Send Reply"
-                                    Command="{x:Bind ViewModel.SubmitReplyCommand}"
-                                    Style="{ThemeResource AccentButtonStyle}"/>
-                        </Grid>
-                    </StackPanel>
-                </Border>
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Comments}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:Comment">
+                            <Border Padding="12" Margin="0,2"
+                                    CornerRadius="6"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                <StackPanel>
+                                    <Grid>
+                                        <TextBlock FontWeight="SemiBold" FontSize="13">
+                                            <Run Text="User #"/>
+                                             <Run Text="{x:Bind Author.UserId}"/>
+                                        </TextBlock>
+                                        <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
+                                                   HorizontalAlignment="Right"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Content}" TextWrapping="Wrap"
+                                               Margin="0,4,0,0"/>
+                                    <TextBlock FontSize="11" Margin="0,2,0,0"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}">
+                                        <Run Text="Reply to: #"/>
+                                         <Run Text="{x:Bind ParentComment.MessageId}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
         </ScrollViewer>
     </Grid>

@@ -136,7 +136,15 @@ public class ForumViewModel : ViewModelBase
         if (SelectedMovieId <= 0) return;
 
         var comments = await _commentService.GetCommentsForMovie(SelectedMovieId);
-        RebuildCommentTree(comments);
+        Comments.Clear();
+        RootComments.Clear();
+
+        foreach (var comment in comments)
+        {
+            Comments.Add(comment);
+            if (comment.ParentComment == null)
+                RootComments.Add(comment);
+        }
     }
 
     /// <summary>
