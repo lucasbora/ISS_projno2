@@ -339,6 +339,35 @@
                             Style="{ThemeResource AccentButtonStyle}"/>
                 </Grid>
 
+				<Border x:Name="ReplyEditorBorder"
+										Visibility="Collapsed"
+										Background="{ThemeResource LayerFillColorDefaultBrush}"
+										Padding="12" Margin="0,0,0,12" CornerRadius="8">
+					<StackPanel>
+						<TextBlock Text="Replying to comment..." FontWeight="SemiBold" Margin="0,0,0,8"/>
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="Auto"/>
+								<ColumnDefinition Width="Auto"/>
+							</Grid.ColumnDefinitions>
+
+							<TextBox Grid.Column="0"
+                                     PlaceholderText="Write your reply..."
+                                     Text="{x:Bind ViewModel.ReplyContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,8,0"/>
+
+							<Button Grid.Column="1" Content="Cancel"
+                                    Command="{x:Bind ViewModel.CancelReplyCommand}"
+                                    Click="CancelReply_Click"
+                                    Margin="0,0,8,0"/>
+
+							<Button Grid.Column="2" Content="Submit Reply"
+                                    Command="{x:Bind ViewModel.SubmitReplyCommand}"
+                                    Style="{ThemeResource AccentButtonStyle}"/>
+						</Grid>
+					</StackPanel>
+				</Border>
                 <ItemsControl ItemsSource="{x:Bind ViewModel.Comments}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:Comment">

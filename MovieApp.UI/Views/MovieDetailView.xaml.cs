@@ -28,11 +28,17 @@ public sealed partial class MovieDetailView : UserControl
             return;
 
         ViewModel.StartReplyCommand.Execute(commentId);
+        ReplyEditorBorder.Visibility = Visibility.Visible; // The line that was crashing!
 
         DispatcherQueue.TryEnqueue(() =>
         {
             ReplyEditorBorder.UpdateLayout();
             ReplyEditorBorder.StartBringIntoView();
         });
+    }
+
+    private void CancelReply_Click(object sender, RoutedEventArgs e)
+    {
+        ReplyEditorBorder.Visibility = Visibility.Collapsed;
     }
 }

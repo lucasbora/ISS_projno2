@@ -1,5 +1,4 @@
 #nullable enable
-
 namespace MovieApp.Core.Models;
 
 /// <summary>
@@ -10,6 +9,17 @@ public class Comment
 {
     /// <summary>Gets or sets the unique message identifier.</summary>
     public int MessageId { get; set; }
+
+    // --- ADDED FOREIGN KEY PROPERTIES ---
+    /// <summary>Gets or sets the ID of the author.</summary>
+    public int AuthorId { get; set; }
+
+    /// <summary>Gets or sets the ID of the movie.</summary>
+    public int MovieId { get; set; }
+
+    /// <summary>Gets or sets the ID of the parent comment (if this is a reply).</summary>
+    public int? ParentCommentId { get; set; }
+    // ------------------------------------
 
     /// <summary>Gets or sets the comment content (max 10000 characters).</summary>
     public string Content { get; set; } = string.Empty;
