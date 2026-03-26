@@ -28,11 +28,5 @@ public sealed partial class MovieDetailView : UserControl
             return;
 
         ViewModel.StartReplyCommand.Execute(commentId);
-
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            ReplyEditorBorder.UpdateLayout();
-            ReplyEditorBorder.StartBringIntoView();
-        });
     }
 }

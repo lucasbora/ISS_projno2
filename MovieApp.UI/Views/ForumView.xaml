@@ -15,7 +15,7 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock FontWeight="SemiBold" FontSize="13">
                                 <Run Text="User #"/>
-                                <Run Text="{x:Bind AuthorId}"/>
+                                <Run Text="{x:Bind AuthorDisplayId}"/>
                             </TextBlock>
                             <TextBlock Text=" • " Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                             <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
@@ -96,7 +96,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock FontWeight="SemiBold" FontSize="13">
                                         <Run Text="User #"/>
-                                         <Run Text="{x:Bind Author.UserId}"/>
+                                         <Run Text="{x:Bind AuthorDisplayId}"/>
                                     </TextBlock>
                                     <TextBlock Text=" • " Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                     <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
@@ -109,11 +109,11 @@
                                        Margin="0,4,0,0"/>
 
                             <!-- Reply indicator -->
-                             <TextBlock Visibility="{x:Bind ParentComment.MessageId, Converter={StaticResource NullableIntToVisibility}}"
+                             <TextBlock Visibility="{x:Bind HasParentComment, Converter={StaticResource BoolToVisibility}}"
                                        FontSize="11" Margin="0,4,0,0"
                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}">
                                 <Run Text="↳ Reply to comment #"/>
-                                 <Run Text="{x:Bind ParentComment.MessageId}"/>
+                                 <Run Text="{x:Bind ParentCommentDisplayId}"/>
                             </TextBlock>
 
                             <!-- Reply button -->

@@ -213,7 +213,8 @@ public class ForumViewModel : ViewModelBase
 
         foreach (var comment in commentList)
         {
-            if (comment.ParentCommentId is int parentId &&
+            if (comment.ParentComment is not null &&
+                comment.ParentComment.MessageId is int parentId &&
                 commentsById.TryGetValue(parentId, out var parentComment))
             {
                 parentComment.Replies.Add(comment);
@@ -230,13 +231,11 @@ public class ForumViewModel : ViewModelBase
         return new Comment
         {
             MessageId = comment.MessageId,
-            AuthorId = comment.AuthorId,
-            MovieId = comment.MovieId,
-            ParentCommentId = comment.ParentCommentId,
             Content = comment.Content,
             CreatedAt = comment.CreatedAt,
             Author = comment.Author,
             Movie = comment.Movie,
+            ParentComment = comment.ParentComment,
             Replies = new List<Comment>()
         };
     }

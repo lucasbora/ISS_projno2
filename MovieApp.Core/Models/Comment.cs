@@ -29,4 +29,10 @@ public class Comment
 
     /// <summary>Gets or sets the collection of replies to this comment.</summary>
     public ICollection<Comment> Replies { get; set; } = new List<Comment>();
+
+    public int AuthorDisplayId => Author?.UserId ?? 0;
+
+    public int ParentCommentDisplayId => ParentComment?.MessageId ?? 0;
+
+    public bool HasParentComment => ParentComment is not null;
 }

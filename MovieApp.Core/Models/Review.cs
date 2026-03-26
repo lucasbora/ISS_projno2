@@ -59,4 +59,6 @@ public class Review
 
     /// <summary>Gets or sets the reviewed movie.</summary>
     public Movie? Movie { get; set; }
+
+    public int UserDisplayId => User?.UserId ?? 0;
 }
