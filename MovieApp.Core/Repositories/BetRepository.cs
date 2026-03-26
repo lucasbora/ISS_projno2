@@ -20,7 +20,7 @@ public class BetRepository
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
             SELECT UserId, BattleId, MovieId, Amount
-            FROM Bets", connection);
+            FROM Bet", connection);
 
         connection.Open();
         using var reader = cmd.ExecuteReader();
@@ -37,7 +37,7 @@ public class BetRepository
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
             SELECT UserId, BattleId, MovieId, Amount
-            FROM Bets
+            FROM Bet
             WHERE UserId = @userId AND BattleId = @battleId", connection);
 
         cmd.Parameters.AddWithValue("@userId", userId);
@@ -64,7 +64,7 @@ public class BetRepository
 
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            INSERT INTO Bets (UserId, BattleId, MovieId, Amount)
+            INSERT INTO Bet (UserId, BattleId, MovieId, Amount)
             VALUES (@userId, @battleId, @movieId, @amount)", connection);
 
         cmd.Parameters.AddWithValue("@userId", bet.User.UserId);
@@ -87,7 +87,7 @@ public class BetRepository
 
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            UPDATE Bets
+            UPDATE Bet
             SET MovieId = @movieId,
                 Amount = @amount
             WHERE UserId = @userId AND BattleId = @battleId", connection);
@@ -105,7 +105,7 @@ public class BetRepository
     {
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            DELETE FROM Bets
+            DELETE FROM Bet
             WHERE UserId = @userId AND BattleId = @battleId", connection);
 
         cmd.Parameters.AddWithValue("@userId", userId);

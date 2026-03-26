@@ -20,7 +20,7 @@ public class MovieRepository
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
             SELECT MovieId, Title, [Year], PosterUrl, Genre, AverageRating
-            FROM Movies", connection);
+            FROM Movie", connection);
 
         connection.Open();
         using var reader = cmd.ExecuteReader();
@@ -31,8 +31,8 @@ public class MovieRepository
                 MovieId = reader.GetInt32(reader.GetOrdinal("MovieId")),
                 Title = reader.GetString(reader.GetOrdinal("Title")),
                 Year = reader.GetInt32(reader.GetOrdinal("Year")),
-                PosterUrl = reader.GetString(reader.GetOrdinal("PosterUrl")),
-                Genre = reader.GetString(reader.GetOrdinal("Genre")),
+                PosterUrl = reader.IsDBNull(reader.GetOrdinal("PosterUrl")) ? string.Empty : reader.GetString(reader.GetOrdinal("PosterUrl")),
+                Genre = reader.IsDBNull(reader.GetOrdinal("Genre")) ? string.Empty : reader.GetString(reader.GetOrdinal("Genre")),
                 AverageRating = reader.GetDouble(reader.GetOrdinal("AverageRating"))
             });
         }
@@ -45,7 +45,7 @@ public class MovieRepository
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
             SELECT MovieId, Title, [Year], PosterUrl, Genre, AverageRating
-            FROM Movies
+            FROM Movie
             WHERE MovieId = @id", connection);
 
         cmd.Parameters.AddWithValue("@id", id);
@@ -72,7 +72,7 @@ public class MovieRepository
     {
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            INSERT INTO Movies (Title, [Year], PosterUrl, Genre, AverageRating)
+            INSERT INTO Movie (Title, [Year], PosterUrl, Genre, AverageRating)
             VALUES (@title, @year, @posterUrl, @genre, @averageRating);
             SELECT CAST(SCOPE_IDENTITY() AS int);", connection);
 
@@ -92,7 +92,7 @@ public class MovieRepository
     {
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            UPDATE Movies
+            UPDATE Movie
             SET Title = @title,
                 [Year] = @year,
                 PosterUrl = @posterUrl,
@@ -114,7 +114,7 @@ public class MovieRepository
     public bool Delete(int id)
     {
         using var connection = new SqlConnection(_connectionString);
-        using var cmd = new SqlCommand("DELETE FROM Movies WHERE MovieId = @id", connection);
+        using var cmd = new SqlCommand("DELETE FROM Movie WHERE MovieId = @id", connection);
 
         cmd.Parameters.AddWithValue("@id", id);
 

@@ -39,6 +39,8 @@ public sealed partial class MainWindow : Window
             MovieDetailOverlay.Visibility = Visibility.Collapsed;
         };
 
+        this.Title = App.UsingMockData ? "MovieApp [MOCK DATA]" : "MovieApp [DATABASE]";
+
         // Load initial data
         this.Activated += async (s, e) =>
         {

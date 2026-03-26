@@ -18,7 +18,7 @@ public class BadgeRepository
         var badges = new List<Badge>();
 
         using var connection = new SqlConnection(_connectionString);
-        using var cmd = new SqlCommand("SELECT BadgeId, Name, CriteriaValue FROM Badges", connection);
+        using var cmd = new SqlCommand("SELECT BadgeId, Name, CriteriaValue FROM Badge", connection);
 
         connection.Open();
         using var reader = cmd.ExecuteReader();
@@ -38,7 +38,7 @@ public class BadgeRepository
     public Badge? GetById(int id)
     {
         using var connection = new SqlConnection(_connectionString);
-        using var cmd = new SqlCommand("SELECT BadgeId, Name, CriteriaValue FROM Badges WHERE BadgeId = @id", connection);
+        using var cmd = new SqlCommand("SELECT BadgeId, Name, CriteriaValue FROM Badge WHERE BadgeId = @id", connection);
 
         cmd.Parameters.AddWithValue("@id", id);
 
@@ -61,7 +61,7 @@ public class BadgeRepository
     {
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            INSERT INTO Badges (Name, CriteriaValue)
+            INSERT INTO Badge (Name, CriteriaValue)
             VALUES (@name, @criteriaValue);
             SELECT CAST(SCOPE_IDENTITY() AS int);", connection);
 
@@ -78,7 +78,7 @@ public class BadgeRepository
     {
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            UPDATE Badges
+            UPDATE Badge
             SET Name = @name,
                 CriteriaValue = @criteriaValue
             WHERE BadgeId = @id", connection);
@@ -94,7 +94,7 @@ public class BadgeRepository
     public bool Delete(int id)
     {
         using var connection = new SqlConnection(_connectionString);
-        using var cmd = new SqlCommand("DELETE FROM Badges WHERE BadgeId = @id", connection);
+        using var cmd = new SqlCommand("DELETE FROM Badge WHERE BadgeId = @id", connection);
 
         cmd.Parameters.AddWithValue("@id", id);
 
