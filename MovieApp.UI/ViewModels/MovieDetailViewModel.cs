@@ -264,18 +264,18 @@ public class MovieDetailViewModel : ViewModelBase
         RebuildCommentTree(comments);
 
         // Load external reviews asynchronously
-        _ = LoadExternalReviewsAsync(movie.Title);
+        _ = LoadExternalReviewsAsync(movie.Title, movie.Year);
     }
 
     /// <summary>
     /// Loads external critic reviews and aggregate scores.
     /// </summary>
-    private async Task LoadExternalReviewsAsync(string movieTitle)
+    private async Task LoadExternalReviewsAsync(string movieTitle, int releaseYear)
     {
         IsLoadingExternalReviews = true;
         try
         {
-            var reviews = await _externalReviewService.GetExternalReviews(movieTitle);
+            var reviews = await _externalReviewService.GetExternalReviews(movieTitle, releaseYear);
             ExternalReviews.Clear();
             foreach (var review in reviews)
                 ExternalReviews.Add(review);
@@ -289,6 +289,11 @@ public class MovieDetailViewModel : ViewModelBase
             LexiconWords.Clear();
             foreach (var (word, count) in lexicon)
                 LexiconWords.Add($"{word} ({count})");
+        }
+        catch
+        {
+            ExternalReviews.Clear();
+            LexiconWords.Clear();
         }
         finally
         {

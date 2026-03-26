@@ -1,4 +1,5 @@
 #nullable enable
+using MovieApp.Core.Interfaces;
 using MovieApp.Core.Models;
 
 namespace MovieApp.Core.Services;
@@ -9,7 +10,7 @@ namespace MovieApp.Core.Services;
 /// </summary>
 public class ExternalReviewService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IEnumerable<IExternalReviewProvider> _providers;
 
     // Common stop words to filter out in lexicon analysis
     private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
@@ -28,51 +29,38 @@ public class ExternalReviewService
     /// <summary>
     /// Initializes a new instance of <see cref="ExternalReviewService"/>.
     /// </summary>
-    /// <param name="httpClient">The HTTP client (injected as singleton).</param>
-    public ExternalReviewService(HttpClient httpClient)
+    /// <param name="providers">External review providers.</param>
+    public ExternalReviewService(IEnumerable<IExternalReviewProvider> providers)
     {
-        _httpClient = httpClient;
+        _providers = providers;
     }
 
     /// <summary>
-    /// Gets external critic reviews for a movie (mock data).
-    /// Structured for easy replacement with real API calls.
+    /// Gets external critic reviews for a movie from all configured providers.
     /// </summary>
     /// <param name="movieTitle">The movie title to search for.</param>
+    /// <param name="releaseYear">The movie release year.</param>
     /// <returns>A list of critic reviews from various sources.</returns>
-    public async Task<List<CriticReview>> GetExternalReviews(string movieTitle)
+    public async Task<List<CriticReview>> GetExternalReviews(string movieTitle, int releaseYear)
     {
-        // Simulate API latency
-        await Task.Delay(500);
-
-        // Mock data structured to match real API response formats
-        return new List<CriticReview>
+        var tasks = _providers.Select(async provider =>
         {
-            new CriticReview
+            try
             {
-                Source = "New York Times",
-                Score = 4.2,
-                Headline = $"'{movieTitle}' — A Cinematic Tour de Force",
-                Snippet = $"'{movieTitle}' delivers an extraordinary experience that captivates from the opening frame to the final credits. The director's vision is both bold and nuanced.",
-                Url = $"https://www.nytimes.com/reviews/{movieTitle.Replace(" ", "-").ToLower()}"
-            },
-            new CriticReview
-            {
-                Source = "The Guardian",
-                Score = 3.8,
-                Headline = $"{movieTitle} Review — Ambitious and Thought-Provoking",
-                Snippet = $"While '{movieTitle}' occasionally stumbles in its ambition, the performances are uniformly excellent and the cinematography is breathtaking.",
-                Url = $"https://www.theguardian.com/film/{movieTitle.Replace(" ", "-").ToLower()}-review"
-            },
-            new CriticReview
-            {
-                Source = "OMDb / Metacritic",
-                Score = 4.0,
-                Headline = $"{movieTitle} — Critical Consensus",
-                Snippet = $"Critics agree: '{movieTitle}' is a masterfully crafted film that rewards patient viewers with a deeply satisfying narrative arc.",
-                Url = $"https://www.omdbapi.com/?t={Uri.EscapeDataString(movieTitle)}"
+                return await provider.GetReviewAsync(movieTitle, releaseYear);
             }
-        };
+            catch
+            {
+                return null;
+            }
+        });
+
+        var results = await Task.WhenAll(tasks);
+
+        return results
+            .Where(r => r is not null)
+            .Select(r => r!)
+            .ToList();
     }
 
     /// <summary>
