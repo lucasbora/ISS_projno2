@@ -61,8 +61,12 @@ public class ReviewService : IReviewService
             throw new InvalidOperationException("Rating must be between 0 and 5 in 0.5 increments.");
 
         // Validate content length
-        if (!string.IsNullOrEmpty(content) && content.Length > 5000)
-            throw new InvalidOperationException("Review content must not exceed 5000 characters.");
+        if (!string.IsNullOrEmpty(content) && content.Length > 2000)
+            throw new InvalidOperationException("Review content must not exceed 2000 characters.");
+
+        if(!string.IsNullOrEmpty(content) && content.Length < 50)
+            throw new InvalidOperationException("Review content must be at least 50 characters long.");
+
 
         var review = new Review
         {
@@ -105,8 +109,11 @@ public class ReviewService : IReviewService
         if (rating < 0 || rating > 5 || (rating * 2) % 1 != 0)
             throw new InvalidOperationException("Rating must be between 0 and 5 in 0.5 increments.");
 
-        if (!string.IsNullOrEmpty(content) && content.Length > 5000)
-            throw new InvalidOperationException("Review content must not exceed 5000 characters.");
+        if (!string.IsNullOrEmpty(content) && content.Length > 2000)
+            throw new InvalidOperationException("Review content must not exceed 2000 characters.");
+
+        if (!string.IsNullOrEmpty(content) && content.Length < 50)
+            throw new InvalidOperationException("Review content must be at least 50 characters long.");
 
         review.StarRating = rating;
         review.Content = content;
@@ -127,7 +134,6 @@ public class ReviewService : IReviewService
         int movieId = review.MovieId;
         _context.Reviews.Remove(review);
         await _context.SaveChangesAsync();
-
         await RecalculateAverageRating(movieId);
     }
 
