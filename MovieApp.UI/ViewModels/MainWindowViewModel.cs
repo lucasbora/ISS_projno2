@@ -36,6 +36,8 @@ public class MainWindowViewModel : ViewModelBase
         // Wire up navigation events
         _catalogViewModel.MovieSelected += OnMovieSelected;
         _movieDetailViewModel.NavigateBack += OnNavigateBack;
+        _movieDetailViewModel.CommentsChanged += OnMovieDetailCommentsChanged;
+        _forumViewModel.CommentsChanged += OnForumCommentsChanged;
 
         LoadDataCommand = new AsyncRelayCommand(async _ => await LoadDataAsync());
     }
@@ -98,5 +100,17 @@ public class MainWindowViewModel : ViewModelBase
     private void OnNavigateBack()
     {
         ShowMovieDetail = false;
+    }
+
+    private async void OnMovieDetailCommentsChanged(int movieId)
+    {
+        if (_forumViewModel.SelectedMovieId == movieId)
+            await _forumViewModel.LoadCommentsAsync();
+    }
+
+    private async void OnForumCommentsChanged(int movieId)
+    {
+        if (_movieDetailViewModel.Movie?.MovieId == movieId)
+            await _movieDetailViewModel.RefreshCommentsAsync();
     }
 }

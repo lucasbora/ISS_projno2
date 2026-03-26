@@ -339,63 +339,43 @@
                             Style="{ThemeResource AccentButtonStyle}"/>
                 </Grid>
 
-				<Border x:Name="ReplyEditorBorder"
-										Visibility="Collapsed"
-										Background="{ThemeResource LayerFillColorDefaultBrush}"
-										Padding="12" Margin="0,0,0,12" CornerRadius="8">
-					<StackPanel>
-						<TextBlock Text="Replying to comment..." FontWeight="SemiBold" Margin="0,0,0,8"/>
-						<Grid>
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="Auto"/>
-								<ColumnDefinition Width="Auto"/>
-							</Grid.ColumnDefinitions>
+                <Border x:Name="ReplyEditorBorder"
+                        Visibility="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay, Converter={StaticResource IntToVisibility}}"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        Padding="12" Margin="0,0,0,12" CornerRadius="8">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Margin="0,0,0,8">
+                            <Run Text="Replying to comment #"/>
+                            <Run Text="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay}"/>
+                        </TextBlock>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-							<TextBox Grid.Column="0"
+                            <TextBox Grid.Column="0"
                                      PlaceholderText="Write your reply..."
                                      Text="{x:Bind ViewModel.ReplyContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,8,0"/>
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     MaxLength="10000"
+                                     Margin="0,0,8,0"/>
 
-							<Button Grid.Column="1" Content="Cancel"
+                            <Button Grid.Column="1" Content="Cancel"
                                     Command="{x:Bind ViewModel.CancelReplyCommand}"
-                                    Click="CancelReply_Click"
                                     Margin="0,0,8,0"/>
 
-							<Button Grid.Column="2" Content="Submit Reply"
+                            <Button Grid.Column="2" Content="Submit Reply"
                                     Command="{x:Bind ViewModel.SubmitReplyCommand}"
                                     Style="{ThemeResource AccentButtonStyle}"/>
-						</Grid>
-					</StackPanel>
-				</Border>
-                <ItemsControl ItemsSource="{x:Bind ViewModel.Comments}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:Comment">
-                            <Border Padding="12" Margin="0,2"
-                                    CornerRadius="6"
-                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                <StackPanel>
-                                    <Grid>
-                                        <TextBlock FontWeight="SemiBold" FontSize="13">
-                                            <Run Text="User #"/>
-                                             <Run Text="{x:Bind AuthorDisplayId}"/>
-                                        </TextBlock>
-                                        <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
-                                                   HorizontalAlignment="Right"
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    </Grid>
-                                    <TextBlock Text="{x:Bind Content}" TextWrapping="Wrap"
-                                               Margin="0,4,0,0"/>
-                                    <TextBlock FontSize="11" Margin="0,2,0,0"
-                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}">
-                                        <Run Text="Reply to: #"/>
-                                         <Run Text="{x:Bind ParentCommentDisplayId}"/>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <ItemsControl ItemsSource="{x:Bind ViewModel.RootComments}"
+                              ItemTemplate="{StaticResource MovieDetailCommentTemplate}"/>
             </StackPanel>
         </ScrollViewer>
     </Grid>
