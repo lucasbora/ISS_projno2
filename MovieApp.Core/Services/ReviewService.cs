@@ -59,7 +59,7 @@ public class ReviewService : IReviewService
     /// <param name="userId">The user's ID.</param>
     /// <param name="movieId">The movie's ID.</param>
     /// <param name="rating">Star rating (0-5, 0.5 increments).</param>
-    /// <param name="content">Review content (max 5000 chars).</param>
+    /// <param name="content">Review content (max 2000 chars, at least 50 chars).</param>
     /// <returns>The created review.</returns>
     /// <exception cref="InvalidOperationException">Thrown on duplicate review or invalid input.</exception>
     public async Task<Review> AddReview(int userId, int movieId, float rating, string content)
@@ -80,8 +80,12 @@ public class ReviewService : IReviewService
             throw new InvalidOperationException("Rating must be between 0 and 5 in 0.5 increments.");
 
         // Validate content length
-        if (!string.IsNullOrEmpty(content) && content.Length > 5000)
-            throw new InvalidOperationException("Review content must not exceed 5000 characters.");
+        if (!string.IsNullOrEmpty(content) && content.Length > 2000)
+            throw new InvalidOperationException("Review content must not exceed 2000 characters.");
+
+        if(!string.IsNullOrEmpty(content) && content.Length < 50)
+            throw new InvalidOperationException("Review content must be at least 50 characters long.");
+
 
         var review = new Review
         {
@@ -123,8 +127,11 @@ public class ReviewService : IReviewService
         if (rating < 0 || rating > 5 || (rating * 2) % 1 != 0)
             throw new InvalidOperationException("Rating must be between 0 and 5 in 0.5 increments.");
 
-        if (!string.IsNullOrEmpty(content) && content.Length > 5000)
-            throw new InvalidOperationException("Review content must not exceed 5000 characters.");
+        if (!string.IsNullOrEmpty(content) && content.Length > 2000)
+            throw new InvalidOperationException("Review content must not exceed 2000 characters.");
+
+        if (!string.IsNullOrEmpty(content) && content.Length < 50)
+            throw new InvalidOperationException("Review content must be at least 50 characters long.");
 
         review.StarRating = rating;
         review.Content = content;
