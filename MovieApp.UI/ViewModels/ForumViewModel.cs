@@ -38,6 +38,11 @@ public class ForumViewModel : ViewModelBase
             if (param is int commentId)
                 ReplyToCommentId = commentId;
         });
+        CancelReplyCommand = new RelayCommand(_ =>
+        {
+            ReplyContent = string.Empty;
+            ReplyToCommentId = 0;
+        });
         LoadMoviesCommand = new AsyncRelayCommand(async _ => await LoadMoviesAsync());
     }
 
@@ -103,6 +108,9 @@ public class ForumViewModel : ViewModelBase
     /// <summary>Gets the command to start a reply.</summary>
     public ICommand StartReplyCommand { get; }
 
+    /// <summary>Gets the command to cancel replying.</summary>
+    public ICommand CancelReplyCommand { get; }
+
     /// <summary>Gets the command to load movies.</summary>
     public ICommand LoadMoviesCommand { get; }
 
@@ -128,15 +136,7 @@ public class ForumViewModel : ViewModelBase
         if (SelectedMovieId <= 0) return;
 
         var comments = await _commentService.GetCommentsForMovie(SelectedMovieId);
-        Comments.Clear();
-        RootComments.Clear();
-
-        foreach (var comment in comments)
-        {
-            Comments.Add(comment);
-            if (comment.ParentCommentId == null)
-                RootComments.Add(comment);
-        }
+        RebuildCommentTree(comments);
     }
 
     /// <summary>
@@ -186,5 +186,50 @@ public class ForumViewModel : ViewModelBase
         {
             StatusMessage = ex.Message;
         }
+    }
+
+    private void RebuildCommentTree(IEnumerable<Comment> comments)
+    {
+        Comments.Clear();
+        RootComments.Clear();
+
+        var commentList = comments.Select(CloneComment).ToList();
+        var commentsById = new Dictionary<int, Comment>();
+
+        foreach (var comment in commentList)
+        {
+            comment.Replies.Clear();
+            Comments.Add(comment);
+            commentsById[comment.MessageId] = comment;
+        }
+
+        foreach (var comment in commentList)
+        {
+            if (comment.ParentCommentId is int parentId &&
+                commentsById.TryGetValue(parentId, out var parentComment))
+            {
+                parentComment.Replies.Add(comment);
+            }
+            else
+            {
+                RootComments.Add(comment);
+            }
+        }
+    }
+
+    private static Comment CloneComment(Comment comment)
+    {
+        return new Comment
+        {
+            MessageId = comment.MessageId,
+            AuthorId = comment.AuthorId,
+            MovieId = comment.MovieId,
+            ParentCommentId = comment.ParentCommentId,
+            Content = comment.Content,
+            CreatedAt = comment.CreatedAt,
+            Author = comment.Author,
+            Movie = comment.Movie,
+            Replies = new List<Comment>()
+        };
     }
 }

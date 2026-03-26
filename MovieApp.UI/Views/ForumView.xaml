@@ -5,6 +5,41 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:MovieApp.Core.Models">
 
+    <UserControl.Resources>
+        <DataTemplate x:Key="ForumCommentTemplate" x:DataType="models:Comment">
+            <StackPanel>
+                <Border Padding="12" Margin="0,2"
+                        CornerRadius="8"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontWeight="SemiBold" FontSize="13">
+                                <Run Text="User #"/>
+                                <Run Text="{x:Bind AuthorId}"/>
+                            </TextBlock>
+                            <TextBlock Text=" • " Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{x:Bind Content}" TextWrapping="Wrap"
+                                   Margin="0,4,0,0"/>
+
+                        <HyperlinkButton Content="Reply"
+                                         FontSize="12"
+                                         Tag="{x:Bind MessageId}"
+                                         Click="ReplyButton_Click"/>
+                    </StackPanel>
+                </Border>
+
+                <ItemsControl ItemsSource="{x:Bind Replies}"
+                              ItemTemplate="{StaticResource ForumCommentTemplate}"
+                              Margin="24,6,0,0"/>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
     <Grid Padding="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -13,11 +48,9 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <TextBlock Grid.Row="0" Text="💬 Movie Forum"
+        <TextBlock Grid.Row="0" Text="Movie Forum"
                    FontSize="28" FontWeight="Bold" Margin="0,0,0,12"/>
 
-        <!-- Movie Selector -->
         <StackPanel Grid.Row="1" Margin="0,0,0,12">
             <TextBlock Text="Select a movie to view comments:" Margin="0,0,0,4"/>
             <ComboBox x:Name="ForumMovieSelector"
@@ -27,7 +60,6 @@
                       SelectionChanged="ForumMovieSelector_SelectionChanged"/>
         </StackPanel>
 
-        <!-- Add Comment -->
         <Grid Grid.Row="2" Margin="0,0,0,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -36,7 +68,9 @@
             <TextBox Grid.Column="0"
                      PlaceholderText="Add a comment (max 10000 chars)..."
                      Text="{x:Bind ViewModel.NewCommentContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                     AcceptsReturn="True" TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     MaxLength="10000"
                      Height="60" Margin="0,0,8,0"/>
             <Button Grid.Column="1" Content="Post Comment"
                     Command="{x:Bind ViewModel.AddCommentCommand}"
@@ -44,75 +78,55 @@
                     VerticalAlignment="Center"/>
         </Grid>
 
-        <!-- Status -->
         <TextBlock Grid.Row="2"
                    Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
                    Foreground="{ThemeResource SystemFillColorSuccessBrush}"
                    FontSize="12" Margin="0,68,0,0"/>
 
-        <!-- Comments List -->
         <ListView Grid.Row="3"
-                  ItemsSource="{x:Bind ViewModel.Comments}"
+                  ItemsSource="{x:Bind ViewModel.RootComments}"
                   SelectionMode="None">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="models:Comment">
-                    <Border Padding="12" Margin="0,2"
-                            CornerRadius="8"
-                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                        <StackPanel>
-                            <Grid>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock FontWeight="SemiBold" FontSize="13">
-                                        <Run Text="User #"/>
-                                        <Run Text="{x:Bind AuthorId}"/>
-                                    </TextBlock>
-                                    <TextBlock Text=" • " Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <TextBlock Text="{x:Bind Content}" TextWrapping="Wrap"
-                                       Margin="0,4,0,0"/>
-
-                            <!-- Reply indicator -->
-                            <TextBlock Visibility="{x:Bind ParentCommentId, Converter={StaticResource NullableIntToVisibility}}"
-                                       FontSize="11" Margin="0,4,0,0"
-                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}">
-                                <Run Text="↳ Reply to comment #"/>
-                                <Run Text="{x:Bind ParentCommentId}"/>
-                            </TextBlock>
-
-                            <!-- Reply button -->
-                            <HyperlinkButton Content="Reply"
-                                             FontSize="12"
-                                             Tag="{x:Bind MessageId}"
-                                             Click="ReplyButton_Click"/>
-                        </StackPanel>
-                    </Border>
-                </DataTemplate>
+                <StaticResource ResourceKey="ForumCommentTemplate"/>
             </ListView.ItemTemplate>
         </ListView>
 
-        <!-- Reply Box (shown at bottom when replying) -->
         <Border Grid.Row="3" VerticalAlignment="Bottom"
                 Visibility="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay, Converter={StaticResource IntToVisibility}}"
                 Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
                 CornerRadius="8" Padding="12" Margin="0,0,0,4">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0"
-                         PlaceholderText="Write your reply..."
-                         Text="{x:Bind ViewModel.ReplyContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         Margin="0,0,8,0"/>
-                <Button Grid.Column="1" Content="Send Reply"
-                        Command="{x:Bind ViewModel.ReplyCommand}"
-                        Style="{ThemeResource AccentButtonStyle}"/>
-            </Grid>
+            <StackPanel>
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center">
+                        <Run Text="Replying to comment #"/>
+                        <Run Text="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay}"/>
+                    </TextBlock>
+                    <Button Grid.Column="1"
+                            Content="Cancel"
+                            Command="{x:Bind ViewModel.CancelReplyCommand}"/>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             PlaceholderText="Write your reply..."
+                             Text="{x:Bind ViewModel.ReplyContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             MaxLength="10000"
+                             Margin="0,0,8,0"/>
+                    <Button Grid.Column="1" Content="Send Reply"
+                            Command="{x:Bind ViewModel.ReplyCommand}"
+                            Style="{ThemeResource AccentButtonStyle}"/>
+                </Grid>
+            </StackPanel>
         </Border>
     </Grid>
 </UserControl>
