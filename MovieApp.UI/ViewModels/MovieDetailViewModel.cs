@@ -71,6 +71,11 @@ public class MovieDetailViewModel : ViewModelBase
             if (param is int commentId)
                 ReplyToCommentId = commentId;
         });
+        CancelReplyCommand = new RelayCommand(_ =>
+        {
+            ReplyContent = string.Empty;
+            ReplyToCommentId = 0;
+        });
         BackCommand = new RelayCommand(_ => NavigateBack?.Invoke());
         DeleteReviewCommand = new AsyncRelayCommand(async param =>
         {
@@ -225,6 +230,8 @@ public class MovieDetailViewModel : ViewModelBase
     public ICommand SubmitReplyCommand { get; }
     /// <summary>Gets the command to start replying to a comment.</summary>
     public ICommand StartReplyCommand { get; }
+    /// <summary>Gets the command to cancel replying to a comment.</summary>
+    public ICommand CancelReplyCommand { get; }
     /// <summary>Gets the command to navigate back.</summary>
     public ICommand BackCommand { get; }
     /// <summary>Gets the command to delete a review.</summary>

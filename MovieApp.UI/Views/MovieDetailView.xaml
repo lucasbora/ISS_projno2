@@ -1,12 +1,13 @@
 <!-- MovieDetailView: Full movie details, reviews, extra reviews, comments -->
 <UserControl
     x:Class="MovieApp.UI.Views.MovieDetailView"
+    x:Name="Root"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:MovieApp.Core.Models">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="20">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer x:Name="MovieDetailScrollViewer" VerticalScrollBarVisibility="Auto">
             <StackPanel MaxWidth="900" HorizontalAlignment="Center">
 
                 <!-- Back Button -->
@@ -294,6 +295,8 @@
                     <TextBox Grid.Column="0"
                              PlaceholderText="Write a comment..."
                              Text="{x:Bind ViewModel.NewCommentContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
                              Margin="0,0,8,0"/>
                     <Button Grid.Column="1" Content="Post"
                             Command="{x:Bind ViewModel.AddCommentCommand}"
@@ -323,11 +326,56 @@
                                         <Run Text="Reply to: #"/>
                                         <Run Text="{x:Bind ParentCommentId}"/>
                                     </TextBlock>
+                                    <Button Content="Reply"
+                                            Tag="{x:Bind MessageId}"
+                                            Click="ReplyButton_Click"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,8,0,0"/>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
+                <Border x:Name="ReplyEditorBorder"
+                        Visibility="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay, Converter={StaticResource IntToVisibility}}"
+                        Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="12"
+                        Margin="0,8,0,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center">
+                                <Run Text="Replying to comment #"/>
+                                <Run Text="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay}"/>
+                            </TextBlock>
+                            <Button Grid.Column="1"
+                                    Content="Cancel"
+                                    Command="{x:Bind ViewModel.CancelReplyCommand}"/>
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     PlaceholderText="Write your reply..."
+                                     Text="{x:Bind ViewModel.ReplyContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     Margin="0,0,8,0"/>
+                            <Button Grid.Column="1"
+                                    Content="Send Reply"
+                                    Command="{x:Bind ViewModel.SubmitReplyCommand}"
+                                    Style="{ThemeResource AccentButtonStyle}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
     </Grid>

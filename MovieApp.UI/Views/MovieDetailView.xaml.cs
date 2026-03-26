@@ -1,5 +1,6 @@
 #nullable enable
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
 using MovieApp.UI.ViewModels;
 
 namespace MovieApp.UI.Views;
@@ -19,5 +20,19 @@ public sealed partial class MovieDetailView : UserControl
     {
         this.InitializeComponent();
         this.DataContextChanged += (s, e) => Bindings.Update();
+    }
+
+    private void ReplyButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.Tag is not int commentId || ViewModel == null)
+            return;
+
+        ViewModel.StartReplyCommand.Execute(commentId);
+
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            ReplyEditorBorder.UpdateLayout();
+            ReplyEditorBorder.StartBringIntoView();
+        });
     }
 }
