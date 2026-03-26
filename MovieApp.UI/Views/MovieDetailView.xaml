@@ -181,7 +181,7 @@
                     <Slider Minimum="0" Maximum="5" StepFrequency="0.5"
                             Value="{x:Bind ViewModel.NewReviewRating, Mode=TwoWay}"
                             Header="Rating"/>
-                    <TextBox PlaceholderText="Write your review (max 5000 characters)..."
+                    <TextBox PlaceholderText="Write your review (max 2000 characters)..."
                              Text="{x:Bind ViewModel.NewReviewContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True" TextWrapping="Wrap"
                              Height="120" Margin="0,8,0,0"/>
