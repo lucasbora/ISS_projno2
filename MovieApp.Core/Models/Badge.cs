@@ -1,0 +1,28 @@
+#nullable enable
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace MovieApp.Core.Models;
+
+/// <summary>
+/// Represents a badge (achievement) that can be earned by users.
+/// </summary>
+public class Badge
+{
+    /// <summary>Gets or sets the unique badge identifier.</summary>
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int BadgeId { get; set; }
+
+    /// <summary>Gets or sets the badge name.</summary>
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the criteria value for earning this badge.</summary>
+    public int CriteriaValue { get; set; }
+
+    // Navigation properties
+    /// <summary>Gets or sets the collection of user-badge associations.</summary>
+    public ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
+}
