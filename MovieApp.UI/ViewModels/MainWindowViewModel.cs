@@ -13,6 +13,7 @@ public class MainWindowViewModel : ViewModelBase
     private readonly MovieDetailViewModel _movieDetailViewModel;
     private readonly BattleViewModel _battleViewModel;
     private readonly ForumViewModel _forumViewModel;
+    private readonly ProfileViewModel _profileViewModel;
 
     private int _selectedTabIndex;
     private bool _showMovieDetail;
@@ -23,12 +24,14 @@ public class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(CatalogViewModel catalogViewModel,
         MovieDetailViewModel movieDetailViewModel,
         BattleViewModel battleViewModel,
-        ForumViewModel forumViewModel)
+        ForumViewModel forumViewModel,
+        ProfileViewModel profileViewModel)
     {
         _catalogViewModel = catalogViewModel;
         _movieDetailViewModel = movieDetailViewModel;
         _battleViewModel = battleViewModel;
         _forumViewModel = forumViewModel;
+        _profileViewModel = profileViewModel;
 
         // Wire up navigation events
         _catalogViewModel.MovieSelected += OnMovieSelected;
@@ -48,6 +51,9 @@ public class MainWindowViewModel : ViewModelBase
 
     /// <summary>Gets the forum view model.</summary>
     public ForumViewModel ForumViewModel => _forumViewModel;
+
+    /// <summary>Gets the profile view model.</summary>
+    public ProfileViewModel ProfileViewModel => _profileViewModel;
 
     /// <summary>Gets or sets the selected tab index.</summary>
     public int SelectedTabIndex
@@ -74,6 +80,7 @@ public class MainWindowViewModel : ViewModelBase
         await _catalogViewModel.LoadMoviesAsync();
         await _battleViewModel.LoadBattleAsync();
         await _forumViewModel.LoadMoviesAsync();
+        await _profileViewModel.LoadProfileAsync();
     }
 
     /// <summary>
