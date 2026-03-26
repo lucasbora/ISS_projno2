@@ -64,7 +64,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock FontWeight="SemiBold" FontSize="13">
                                         <Run Text="User #"/>
-                                        <Run Text="{x:Bind AuthorId}"/>
+                                         <Run Text="{x:Bind Author.UserId}"/>
                                     </TextBlock>
                                     <TextBlock Text=" • " Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                     <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
@@ -77,11 +77,11 @@
                                        Margin="0,4,0,0"/>
 
                             <!-- Reply indicator -->
-                            <TextBlock Visibility="{x:Bind ParentCommentId, Converter={StaticResource NullableIntToVisibility}}"
+                             <TextBlock Visibility="{x:Bind ParentComment.MessageId, Converter={StaticResource NullableIntToVisibility}}"
                                        FontSize="11" Margin="0,4,0,0"
                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}">
                                 <Run Text="↳ Reply to comment #"/>
-                                <Run Text="{x:Bind ParentCommentId}"/>
+                                 <Run Text="{x:Bind ParentComment.MessageId}"/>
                             </TextBlock>
 
                             <!-- Reply button -->

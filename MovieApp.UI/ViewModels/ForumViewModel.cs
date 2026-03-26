@@ -134,7 +134,7 @@ public class ForumViewModel : ViewModelBase
         foreach (var comment in comments)
         {
             Comments.Add(comment);
-            if (comment.ParentCommentId == null)
+            if (comment.ParentComment == null)
                 RootComments.Add(comment);
         }
     }

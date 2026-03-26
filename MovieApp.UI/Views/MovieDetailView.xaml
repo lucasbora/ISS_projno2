@@ -258,7 +258,7 @@
                                     <Grid>
                                         <TextBlock FontWeight="SemiBold">
                                             <Run Text="User #"/>
-                                            <Run Text="{x:Bind UserId}"/>
+                                             <Run Text="{x:Bind User.UserId}"/>
                                         </TextBlock>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                             <TextBlock Text="⭐" Margin="0,0,4,0"/>
@@ -310,7 +310,7 @@
                                     <Grid>
                                         <TextBlock FontWeight="SemiBold" FontSize="13">
                                             <Run Text="User #"/>
-                                            <Run Text="{x:Bind AuthorId}"/>
+                                             <Run Text="{x:Bind Author.UserId}"/>
                                         </TextBlock>
                                         <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
                                                    HorizontalAlignment="Right"
@@ -321,7 +321,7 @@
                                     <TextBlock FontSize="11" Margin="0,2,0,0"
                                                Foreground="{ThemeResource TextFillColorTertiaryBrush}">
                                         <Run Text="Reply to: #"/>
-                                        <Run Text="{x:Bind ParentCommentId}"/>
+                                         <Run Text="{x:Bind ParentComment.MessageId}"/>
                                     </TextBlock>
                                 </StackPanel>
                             </Border>

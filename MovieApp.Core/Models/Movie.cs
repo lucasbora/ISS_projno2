@@ -31,4 +31,6 @@ public class Movie
 
     /// <summary>Gets or sets the collection of comments for this movie.</summary>
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+    public override string ToString() => Title;
 }

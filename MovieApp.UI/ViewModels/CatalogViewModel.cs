@@ -13,7 +13,7 @@ public class CatalogViewModel : ViewModelBase
 {
     private readonly ICatalogService _catalogService;
     private string _searchQuery = string.Empty;
-    private string _selectedGenre = string.Empty;
+    private string _selectedGenre = "All";
     private double _minimumRating;
     private Movie? _selectedMovie;
 
@@ -48,7 +48,7 @@ public class CatalogViewModel : ViewModelBase
     /// <summary>Gets the list of available genres.</summary>
     public ObservableCollection<string> Genres { get; } = new()
     {
-        "", "Action", "Comedy", "Crime", "Drama", "Sci-Fi"
+        "All", "Action", "Comedy", "Crime", "Drama", "Sci-Fi"
     };
 
     /// <summary>Gets or sets the search query text.</summary>
@@ -145,13 +145,14 @@ public class CatalogViewModel : ViewModelBase
     /// </summary>
     private async Task FilterAsync()
     {
-        if (string.IsNullOrWhiteSpace(SelectedGenre) && MinimumRating <= 0)
+        if ((string.IsNullOrWhiteSpace(SelectedGenre) || SelectedGenre == "All") && MinimumRating <= 0)
         {
             await LoadMoviesAsync();
             return;
         }
 
-        var movies = await _catalogService.FilterMovies(SelectedGenre, (float)MinimumRating);
+        var genre = SelectedGenre == "All" ? string.Empty : SelectedGenre;
+        var movies = await _catalogService.FilterMovies(genre, (float)MinimumRating);
         Movies.Clear();
         foreach (var movie in movies)
             Movies.Add(movie);

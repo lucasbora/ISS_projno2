@@ -1,8 +1,7 @@
 #nullable enable
-using Microsoft.EntityFrameworkCore;
-using MovieApp.Core.Data;
 using MovieApp.Core.Interfaces;
 using MovieApp.Core.Models;
+using MovieApp.Core.Repositories;
 
 namespace MovieApp.Core.Services;
 
@@ -11,15 +10,24 @@ namespace MovieApp.Core.Services;
 /// </summary>
 public class CommentService : ICommentService
 {
-    private readonly MovieAppDbContext _context;
+    private readonly CommentRepository _commentRepository;
+    private readonly UserRepository _userRepository;
+    private readonly MovieRepository _movieRepository;
 
     /// <summary>
     /// Initializes a new instance of <see cref="CommentService"/>.
     /// </summary>
-    /// <param name="context">The database context.</param>
-    public CommentService(MovieAppDbContext context)
+    /// <param name="commentRepository">The comment repository.</param>
+    /// <param name="userRepository">The user repository.</param>
+    /// <param name="movieRepository">The movie repository.</param>
+    public CommentService(
+        CommentRepository commentRepository,
+        UserRepository userRepository,
+        MovieRepository movieRepository)
     {
-        _context = context;
+        _commentRepository = commentRepository;
+        _userRepository = userRepository;
+        _movieRepository = movieRepository;
     }
 
     /// <summary>
@@ -30,11 +38,12 @@ public class CommentService : ICommentService
     /// <returns>A flat list of comments.</returns>
     public async Task<List<Comment>> GetCommentsForMovie(int movieId)
     {
-        return await _context.Comments
-            .Include(c => c.Author)
-            .Where(c => c.MovieId == movieId)
+        var comments = _commentRepository.GetAll()
+            .Where(c => c.Movie?.MovieId == movieId)
             .OrderByDescending(c => c.CreatedAt)
-            .ToListAsync();
+            .ToList();
+
+        return await Task.FromResult(comments);
     }
 
     /// <summary>
@@ -50,17 +59,21 @@ public class CommentService : ICommentService
         if (!string.IsNullOrEmpty(content) && content.Length > 10000)
             throw new InvalidOperationException("Comment content must not exceed 10000 characters.");
 
+        var author = _userRepository.GetById(userId)
+            ?? throw new InvalidOperationException("User not found.");
+        var movie = _movieRepository.GetById(movieId)
+            ?? throw new InvalidOperationException("Movie not found.");
+
         var comment = new Comment
         {
-            AuthorId = userId,
-            MovieId = movieId,
+            Author = author,
+            Movie = movie,
             Content = content,
             CreatedAt = DateTime.UtcNow,
-            ParentCommentId = null
+            ParentComment = null
         };
 
-        _context.Comments.Add(comment);
-        await _context.SaveChangesAsync();
+        _commentRepository.Insert(comment);
 
         return comment;
     }
@@ -75,23 +88,29 @@ public class CommentService : ICommentService
     /// <exception cref="InvalidOperationException">Thrown when parent not found or content invalid.</exception>
     public async Task<Comment> AddReply(int userId, int parentCommentId, string content)
     {
-        var parentComment = await _context.Comments.FindAsync(parentCommentId)
+        var parentComment = _commentRepository.GetById(parentCommentId)
             ?? throw new InvalidOperationException("Parent comment not found.");
 
         if (!string.IsNullOrEmpty(content) && content.Length > 10000)
             throw new InvalidOperationException("Comment content must not exceed 10000 characters.");
 
+        var author = _userRepository.GetById(userId)
+            ?? throw new InvalidOperationException("User not found.");
+        var parentMovieId = parentComment.Movie?.MovieId
+            ?? throw new InvalidOperationException("Parent comment movie is not available.");
+        var movie = _movieRepository.GetById(parentMovieId)
+            ?? throw new InvalidOperationException("Movie not found.");
+
         var reply = new Comment
         {
-            AuthorId = userId,
-            MovieId = parentComment.MovieId,
+            Author = author,
+            Movie = movie,
             Content = content,
             CreatedAt = DateTime.UtcNow,
-            ParentCommentId = parentCommentId
+            ParentComment = new Comment { MessageId = parentCommentId }
         };
 
-        _context.Comments.Add(reply);
-        await _context.SaveChangesAsync();
+        _commentRepository.Insert(reply);
 
         return reply;
     }
@@ -102,10 +121,10 @@ public class CommentService : ICommentService
     /// <param name="commentId">The comment identifier.</param>
     public async Task DeleteComment(int commentId)
     {
-        var comment = await _context.Comments.FindAsync(commentId)
+        var comment = _commentRepository.GetById(commentId)
             ?? throw new InvalidOperationException("Comment not found.");
 
-        _context.Comments.Remove(comment);
-        await _context.SaveChangesAsync();
+        _commentRepository.Delete(comment.MessageId);
+        await Task.CompletedTask;
     }
 }
