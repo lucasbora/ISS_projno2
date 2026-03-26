@@ -1,8 +1,7 @@
 #nullable enable
-using Microsoft.EntityFrameworkCore;
-using MovieApp.Core.Data;
 using MovieApp.Core.Interfaces;
 using MovieApp.Core.Models;
+using MovieApp.Core.Repositories;
 
 namespace MovieApp.Core.Services;
 
@@ -11,15 +10,15 @@ namespace MovieApp.Core.Services;
 /// </summary>
 public class CatalogService : ICatalogService
 {
-    private readonly MovieAppDbContext _context;
+    private readonly MovieRepository _movieRepository;
 
     /// <summary>
     /// Initializes a new instance of <see cref="CatalogService"/>.
     /// </summary>
-    /// <param name="context">The database context.</param>
-    public CatalogService(MovieAppDbContext context)
+    /// <param name="movieRepository">The movie repository.</param>
+    public CatalogService(MovieRepository movieRepository)
     {
-        _context = context;
+        _movieRepository = movieRepository;
     }
 
     /// <summary>
@@ -28,9 +27,11 @@ public class CatalogService : ICatalogService
     /// <returns>A list of all movies.</returns>
     public async Task<List<Movie>> GetAllMovies()
     {
-        return await _context.Movies
+        var movies = _movieRepository.GetAll()
             .OrderBy(m => m.Title)
-            .ToListAsync();
+            .ToList();
+
+        return await Task.FromResult(movies);
     }
 
     /// <summary>
@@ -41,7 +42,7 @@ public class CatalogService : ICatalogService
     /// <exception cref="InvalidOperationException">Thrown when movie is not found.</exception>
     public async Task<Movie> GetMovieById(int movieId)
     {
-        var movie = await _context.Movies.FindAsync(movieId);
+        var movie = _movieRepository.GetById(movieId);
         return movie ?? throw new InvalidOperationException($"Movie with ID {movieId} not found.");
     }
 
@@ -55,10 +56,12 @@ public class CatalogService : ICatalogService
         if (string.IsNullOrWhiteSpace(query))
             return await GetAllMovies();
 
-        return await _context.Movies
+        var movies = _movieRepository.GetAll()
             .Where(m => m.Title.ToLower().Contains(query.ToLower()))
             .OrderBy(m => m.Title)
-            .ToListAsync();
+            .ToList();
+
+        return await Task.FromResult(movies);
     }
 
     /// <summary>
@@ -69,7 +72,7 @@ public class CatalogService : ICatalogService
     /// <returns>A list of filtered movies.</returns>
     public async Task<List<Movie>> FilterMovies(string genre, float minRating)
     {
-        var query = _context.Movies.AsQueryable();
+        var query = _movieRepository.GetAll().AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(genre))
         {
@@ -78,8 +81,10 @@ public class CatalogService : ICatalogService
 
         query = query.Where(m => m.AverageRating >= minRating);
 
-        return await query
+        var movies = query
             .OrderBy(m => m.Title)
-            .ToListAsync();
+            .ToList();
+
+        return await Task.FromResult(movies);
     }
 }

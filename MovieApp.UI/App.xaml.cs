@@ -1,9 +1,8 @@
 #nullable enable
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
-using MovieApp.Core.Data;
 using MovieApp.Core.Interfaces;
+using MovieApp.Core.Repositories;
 using MovieApp.Core.Services;
 using MovieApp.UI.ViewModels;
 
@@ -39,15 +38,15 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-        // Ensure database is created and seeded
         using (var scope = Services.CreateScope())
         {
-            var context = scope.ServiceProvider.GetRequiredService<MovieAppDbContext>();
-            await DatabaseSeeder.SeedAsync(context);
+            var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+            initializer.EnsureCreatedAndSeeded();
         }
 
         _window = new MainWindow();
         _window.Activate();
+        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -56,9 +55,18 @@ public partial class App : Application
     /// <param name="services">The service collection.</param>
     private static void ConfigureServices(IServiceCollection services)
     {
-        // Database context — InMemory for demo (no SQL Server needed)
-        services.AddDbContext<MovieAppDbContext>(options =>
-            options.UseInMemoryDatabase("MovieAppDb"));
+        string connString = "Server=(localdb)\\mssqllocaldb;Database=MovieApp;Trusted_Connection=True;TrustServerCertificate=True;";
+
+        services.AddTransient<MovieRepository>(sp => new MovieRepository(connString));
+        services.AddTransient<UserRepository>(sp => new UserRepository(connString));
+        services.AddTransient<ReviewRepository>(sp => new ReviewRepository(connString));
+        services.AddTransient<CommentRepository>(sp => new CommentRepository(connString));
+        services.AddTransient<BattleRepository>(sp => new BattleRepository(connString));
+        services.AddTransient<BadgeRepository>(sp => new BadgeRepository(connString));
+        services.AddTransient<BetRepository>(sp => new BetRepository(connString));
+        services.AddTransient<UserStatsRepository>(sp => new UserStatsRepository(connString));
+        services.AddTransient<UserBadgeRepository>(sp => new UserBadgeRepository(connString));
+        services.AddTransient<DatabaseInitializer>(sp => new DatabaseInitializer(connString));
 
         // Core services
         services.AddScoped<ICatalogService, CatalogService>();
@@ -76,6 +84,7 @@ public partial class App : Application
         services.AddTransient<MovieDetailViewModel>();
         services.AddTransient<BattleViewModel>();
         services.AddTransient<ForumViewModel>();
+        services.AddTransient<ProfileViewModel>();
         services.AddTransient<MainWindowViewModel>();
     }
 }

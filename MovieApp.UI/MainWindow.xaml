@@ -27,6 +27,9 @@
             <TabViewItem Header="💬 Forum" IsClosable="False">
                 <views:ForumView x:Name="ForumViewControl" />
             </TabViewItem>
+            <TabViewItem Header="👤 Profile" IsClosable="False">
+                <views:ProfileView x:Name="ProfileViewControl" />
+            </TabViewItem>
         </TabView>
     </Grid>
 </Window>

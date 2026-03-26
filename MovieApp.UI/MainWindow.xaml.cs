@@ -26,6 +26,7 @@ public sealed partial class MainWindow : Window
         MovieDetailViewControl.DataContext = _viewModel.MovieDetailViewModel;
         BattleViewControl.DataContext = _viewModel.BattleViewModel;
         ForumViewControl.DataContext = _viewModel.ForumViewModel;
+        ProfileViewControl.DataContext = _viewModel.ProfileViewModel;
 
         // Wire up detail view navigation
         _viewModel.CatalogViewModel.MovieSelected += movie =>

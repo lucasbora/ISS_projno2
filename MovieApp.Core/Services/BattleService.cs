@@ -1,8 +1,7 @@
 #nullable enable
-using Microsoft.EntityFrameworkCore;
-using MovieApp.Core.Data;
 using MovieApp.Core.Interfaces;
 using MovieApp.Core.Models;
+using MovieApp.Core.Repositories;
 
 namespace MovieApp.Core.Services;
 
@@ -11,17 +10,31 @@ namespace MovieApp.Core.Services;
 /// </summary>
 public class BattleService : IBattleService
 {
-    private readonly MovieAppDbContext _context;
+    private readonly BattleRepository _battleRepository;
+    private readonly BetRepository _betRepository;
+    private readonly MovieRepository _movieRepository;
+    private readonly UserRepository _userRepository;
     private readonly IPointService _pointService;
 
     /// <summary>
     /// Initializes a new instance of <see cref="BattleService"/>.
     /// </summary>
-    /// <param name="context">The database context.</param>
+    /// <param name="battleRepository">The battle repository.</param>
+    /// <param name="betRepository">The bet repository.</param>
+    /// <param name="movieRepository">The movie repository.</param>
+    /// <param name="userRepository">The user repository.</param>
     /// <param name="pointService">The point service for bet handling.</param>
-    public BattleService(MovieAppDbContext context, IPointService pointService)
+    public BattleService(
+        BattleRepository battleRepository,
+        BetRepository betRepository,
+        MovieRepository movieRepository,
+        UserRepository userRepository,
+        IPointService pointService)
     {
-        _context = context;
+        _battleRepository = battleRepository;
+        _betRepository = betRepository;
+        _movieRepository = movieRepository;
+        _userRepository = userRepository;
         _pointService = pointService;
     }
 
@@ -31,10 +44,10 @@ public class BattleService : IBattleService
     /// <returns>The active battle or null.</returns>
     public async Task<Battle?> GetActiveBattle()
     {
-        return await _context.Battles
-            .Include(b => b.FirstMovie)
-            .Include(b => b.SecondMovie)
-            .FirstOrDefaultAsync(b => b.Status == "Active");
+        var battle = _battleRepository.GetAll()
+            .FirstOrDefault(b => b.Status == "Active");
+
+        return await Task.FromResult(battle);
     }
 
     /// <summary>
@@ -48,14 +61,14 @@ public class BattleService : IBattleService
     public async Task<Battle> CreateBattle(int firstMovieId, int secondMovieId)
     {
         // Check no active battle exists
-        var activeBattle = await _context.Battles
-            .AnyAsync(b => b.Status == "Active");
+        var activeBattle = _battleRepository.GetAll()
+            .Any(b => b.Status == "Active");
         if (activeBattle)
             throw new InvalidOperationException("An active battle already exists.");
 
-        var firstMovie = await _context.Movies.FindAsync(firstMovieId)
+        var firstMovie = _movieRepository.GetById(firstMovieId)
             ?? throw new InvalidOperationException("First movie not found.");
-        var secondMovie = await _context.Movies.FindAsync(secondMovieId)
+        var secondMovie = _movieRepository.GetById(secondMovieId)
             ?? throw new InvalidOperationException("Second movie not found.");
 
         // Validate rating difference
@@ -72,8 +85,8 @@ public class BattleService : IBattleService
 
         var battle = new Battle
         {
-            FirstMovieId = firstMovieId,
-            SecondMovieId = secondMovieId,
+            FirstMovie = firstMovie,
+            SecondMovie = secondMovie,
             InitialRatingFirstMovie = firstMovie.AverageRating,
             InitialRatingSecondMovie = secondMovie.AverageRating,
             StartDate = startDate,
@@ -81,8 +94,7 @@ public class BattleService : IBattleService
             Status = "Active"
         };
 
-        _context.Battles.Add(battle);
-        await _context.SaveChangesAsync();
+        _battleRepository.Insert(battle);
 
         return battle;
     }
@@ -102,24 +114,30 @@ public class BattleService : IBattleService
             throw new InvalidOperationException("Bet amount must be greater than 0.");
 
         // Check if user already bet on this battle
-        var existingBet = await _context.Bets
-            .AnyAsync(b => b.UserId == userId && b.BattleId == battleId);
+        var existingBet = _betRepository.GetAll()
+            .Any(b => b.User?.UserId == userId && b.Battle?.BattleId == battleId);
         if (existingBet)
             throw new InvalidOperationException("User has already placed a bet on this battle.");
+
+        var user = _userRepository.GetById(userId)
+            ?? throw new InvalidOperationException("User not found.");
+        var battle = _battleRepository.GetById(battleId)
+            ?? throw new InvalidOperationException("Battle not found.");
+        var movie = _movieRepository.GetById(movieId)
+            ?? throw new InvalidOperationException("Movie not found.");
 
         // Freeze the points
         await _pointService.FreezePoints(userId, amount);
 
         var bet = new Bet
         {
-            UserId = userId,
-            BattleId = battleId,
-            MovieId = movieId,
+            User = user,
+            Battle = battle,
+            Movie = movie,
             Amount = amount
         };
 
-        _context.Bets.Add(bet);
-        await _context.SaveChangesAsync();
+        _betRepository.Insert(bet);
 
         return bet;
     }
@@ -132,9 +150,10 @@ public class BattleService : IBattleService
     /// <returns>The user's bet or null.</returns>
     public async Task<Bet?> GetBet(int userId, int battleId)
     {
-        return await _context.Bets
-            .Include(b => b.Movie)
-            .FirstOrDefaultAsync(b => b.UserId == userId && b.BattleId == battleId);
+        var bet = _betRepository.GetAll()
+            .FirstOrDefault(b => b.User?.UserId == userId && b.Battle?.BattleId == battleId);
+
+        return await Task.FromResult(bet);
     }
 
     /// <summary>
@@ -144,16 +163,15 @@ public class BattleService : IBattleService
     /// <returns>The winning movie's ID.</returns>
     public async Task<int> DetermineWinner(int battleId)
     {
-        var battle = await _context.Battles
-            .Include(b => b.FirstMovie)
-            .Include(b => b.SecondMovie)
-            .FirstOrDefaultAsync(b => b.BattleId == battleId)
+        var battle = _battleRepository.GetById(battleId)
             ?? throw new InvalidOperationException("Battle not found.");
 
         double firstImprovement = (battle.FirstMovie?.AverageRating ?? 0) - battle.InitialRatingFirstMovie;
         double secondImprovement = (battle.SecondMovie?.AverageRating ?? 0) - battle.InitialRatingSecondMovie;
 
-        return firstImprovement >= secondImprovement ? battle.FirstMovieId : battle.SecondMovieId;
+        return firstImprovement >= secondImprovement
+            ? (battle.FirstMovie?.MovieId ?? 0)
+            : (battle.SecondMovie?.MovieId ?? 0);
     }
 
     /// <summary>
@@ -164,25 +182,25 @@ public class BattleService : IBattleService
     {
         int winningMovieId = await DetermineWinner(battleId);
 
-        var bets = await _context.Bets
-            .Where(b => b.BattleId == battleId)
-            .ToListAsync();
+        var bets = _betRepository.GetAll()
+            .Where(b => b.Battle?.BattleId == battleId)
+            .ToList();
 
         foreach (var bet in bets)
         {
-            if (bet.MovieId == winningMovieId)
+            if (bet.Movie?.MovieId == winningMovieId)
             {
                 // Winner gets Amount * 2
-                await _pointService.RefundPoints(bet.UserId, bet.Amount * 2);
+                await _pointService.RefundPoints(bet.User?.UserId ?? 0, bet.Amount * 2);
             }
             // Losers lose their frozen points (already deducted)
         }
 
-        var battle = await _context.Battles.FindAsync(battleId);
+        var battle = _battleRepository.GetById(battleId);
         if (battle != null)
         {
             battle.Status = "Finished";
-            await _context.SaveChangesAsync();
+            _battleRepository.Update(battle);
         }
     }
 }

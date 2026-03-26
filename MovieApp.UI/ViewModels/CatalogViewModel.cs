@@ -17,7 +17,7 @@ public class CatalogViewModel : ViewModelBase
 {
     private readonly ICatalogService _catalogService;
     private string _searchQuery = string.Empty;
-    private string _selectedGenre = "All Genres"; // Default to "All Genres"
+    private string _selectedGenre = "All";
     private double _minimumRating;
     private Movie? _selectedMovie;
 

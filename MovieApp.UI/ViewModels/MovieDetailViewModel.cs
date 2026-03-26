@@ -71,6 +71,11 @@ public class MovieDetailViewModel : ViewModelBase
             if (param is int commentId)
                 ReplyToCommentId = commentId;
         });
+        CancelReplyCommand = new RelayCommand(_ =>
+        {
+            ReplyContent = string.Empty;
+            ReplyToCommentId = 0;
+        });
         BackCommand = new RelayCommand(_ => NavigateBack?.Invoke());
         DeleteReviewCommand = new AsyncRelayCommand(async param =>
         {
@@ -84,6 +89,9 @@ public class MovieDetailViewModel : ViewModelBase
 
     /// <summary>Gets the collection of comments for this movie.</summary>
     public ObservableCollection<Comment> Comments { get; } = new();
+
+    /// <summary>Gets the collection of root-level comments for this movie.</summary>
+    public ObservableCollection<Comment> RootComments { get; } = new();
 
     /// <summary>Gets the collection of external critic reviews.</summary>
     public ObservableCollection<CriticReview> ExternalReviews { get; } = new();
@@ -225,6 +233,8 @@ public class MovieDetailViewModel : ViewModelBase
     public ICommand SubmitReplyCommand { get; }
     /// <summary>Gets the command to start replying to a comment.</summary>
     public ICommand StartReplyCommand { get; }
+    /// <summary>Gets the command to cancel replying to a comment.</summary>
+    public ICommand CancelReplyCommand { get; }
     /// <summary>Gets the command to navigate back.</summary>
     public ICommand BackCommand { get; }
     /// <summary>Gets the command to delete a review.</summary>
@@ -247,13 +257,11 @@ public class MovieDetailViewModel : ViewModelBase
             Reviews.Add(review);
 
         AverageRating = await _reviewService.GetAverageRating(movie.MovieId);
-        HasUserReview = reviews.Any(r => r.UserId == _currentUserId);
+        HasUserReview = reviews.Any(r => r.User?.UserId == _currentUserId);
 
         // Load comments
         var comments = await _commentService.GetCommentsForMovie(movie.MovieId);
-        Comments.Clear();
-        foreach (var comment in comments)
-            Comments.Add(comment);
+        RebuildCommentTree(comments);
 
         // Load external reviews asynchronously
         _ = LoadExternalReviewsAsync(movie.Title);
@@ -316,7 +324,7 @@ public class MovieDetailViewModel : ViewModelBase
     {
         if (Movie == null) return;
 
-        var userReview = Reviews.FirstOrDefault(r => r.UserId == _currentUserId);
+        var userReview = Reviews.FirstOrDefault(r => r.User?.UserId == _currentUserId);
         if (userReview == null)
         {
             StatusMessage = "You must submit a regular review first.";
@@ -351,9 +359,7 @@ public class MovieDetailViewModel : ViewModelBase
             await _commentService.AddComment(_currentUserId, Movie.MovieId, NewCommentContent);
             NewCommentContent = string.Empty;
             var comments = await _commentService.GetCommentsForMovie(Movie.MovieId);
-            Comments.Clear();
-            foreach (var comment in comments)
-                Comments.Add(comment);
+            RebuildCommentTree(comments);
         }
         catch (InvalidOperationException ex)
         {
@@ -374,14 +380,57 @@ public class MovieDetailViewModel : ViewModelBase
             ReplyContent = string.Empty;
             ReplyToCommentId = 0;
             var comments = await _commentService.GetCommentsForMovie(Movie.MovieId);
-            Comments.Clear();
-            foreach (var comment in comments)
-                Comments.Add(comment);
+            RebuildCommentTree(comments);
         }
         catch (InvalidOperationException ex)
         {
             StatusMessage = ex.Message;
         }
+    }
+
+    private void RebuildCommentTree(IEnumerable<Comment> comments)
+    {
+        Comments.Clear();
+        RootComments.Clear();
+
+        var commentList = comments.Select(CloneComment).ToList();
+        var commentsById = new Dictionary<int, Comment>();
+
+        foreach (var comment in commentList)
+        {
+            comment.Replies.Clear();
+            Comments.Add(comment);
+            commentsById[comment.MessageId] = comment;
+        }
+
+        foreach (var comment in commentList)
+        {
+            if (comment.ParentCommentId is int parentId &&
+                commentsById.TryGetValue(parentId, out var parentComment))
+            {
+                parentComment.Replies.Add(comment);
+            }
+            else
+            {
+                RootComments.Add(comment);
+            }
+        }
+    }
+
+    private static Comment CloneComment(Comment comment)
+    {
+        return new Comment
+        {
+            MessageId = comment.MessageId,
+            AuthorId = comment.AuthorId,
+            MovieId = comment.MovieId,
+            ParentCommentId = comment.ParentCommentId,
+            Content = comment.Content,
+            CreatedAt = comment.CreatedAt,
+            Author = comment.Author,
+            Movie = comment.Movie,
+            Replies = new List<Comment>()
+        };
     }
 
     /// <summary>
