@@ -1,6 +1,4 @@
 #nullable enable
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MovieApp.Core.Models;
 
@@ -10,8 +8,6 @@ namespace MovieApp.Core.Models;
 public class User
 {
     /// <summary>Gets or sets the unique user identifier.</summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int UserId { get; set; }
 
     // Navigation properties

@@ -1,6 +1,4 @@
 #nullable enable
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MovieApp.Core.Models;
 
@@ -10,24 +8,18 @@ namespace MovieApp.Core.Models;
 public class Movie
 {
     /// <summary>Gets or sets the unique movie identifier.</summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int MovieId { get; set; }
 
     /// <summary>Gets or sets the movie title.</summary>
-    [Required]
-    [MaxLength(500)]
     public string Title { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the release year.</summary>
     public int Year { get; set; }
 
     /// <summary>Gets or sets the poster image URL.</summary>
-    [MaxLength(2000)]
     public string PosterUrl { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the movie genre.</summary>
-    [MaxLength(100)]
     public string Genre { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the calculated average rating.</summary>
