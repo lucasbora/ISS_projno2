@@ -45,7 +45,7 @@ public class ReviewService : IReviewService
     /// <param name="userId">The user's ID.</param>
     /// <param name="movieId">The movie's ID.</param>
     /// <param name="rating">Star rating (0-5, 0.5 increments).</param>
-    /// <param name="content">Review content (max 5000 chars).</param>
+    /// <param name="content">Review content (max 2000 chars, at least 50 chars).</param>
     /// <returns>The created review.</returns>
     /// <exception cref="InvalidOperationException">Thrown on duplicate review or invalid input.</exception>
     public async Task<Review> AddReview(int userId, int movieId, float rating, string content)
