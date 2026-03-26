@@ -24,6 +24,8 @@ public class ForumViewModel : ViewModelBase
     /// <summary>
     /// Initializes a new instance of <see cref="ForumViewModel"/>.
     /// </summary>
+    public event Action<int>? CommentsChanged;
+
     public ForumViewModel(ICommentService commentService, ICatalogService catalogService, int currentUserId = 1)
     {
         _commentService = commentService;
@@ -136,15 +138,7 @@ public class ForumViewModel : ViewModelBase
         if (SelectedMovieId <= 0) return;
 
         var comments = await _commentService.GetCommentsForMovie(SelectedMovieId);
-        Comments.Clear();
-        RootComments.Clear();
-
-        foreach (var comment in comments)
-        {
-            Comments.Add(comment);
-            if (comment.ParentComment == null)
-                RootComments.Add(comment);
-        }
+        RebuildCommentTree(comments);
     }
 
     /// <summary>
@@ -164,6 +158,7 @@ public class ForumViewModel : ViewModelBase
             NewCommentContent = string.Empty;
             StatusMessage = "Comment posted!";
             await LoadCommentsAsync();
+            CommentsChanged?.Invoke(SelectedMovieId);
         }
         catch (InvalidOperationException ex)
         {
@@ -189,6 +184,7 @@ public class ForumViewModel : ViewModelBase
             ReplyToCommentId = 0;
             StatusMessage = "Reply posted!";
             await LoadCommentsAsync();
+            CommentsChanged?.Invoke(SelectedMovieId);
         }
         catch (InvalidOperationException ex)
         {
@@ -213,9 +209,9 @@ public class ForumViewModel : ViewModelBase
 
         foreach (var comment in commentList)
         {
-            if (comment.ParentComment is not null &&
-                comment.ParentComment.MessageId is int parentId &&
-                commentsById.TryGetValue(parentId, out var parentComment))
+            var parentId = comment.ParentCommentId ?? comment.ParentComment?.MessageId;
+            if (parentId is int resolvedParentId &&
+                commentsById.TryGetValue(resolvedParentId, out var parentComment))
             {
                 parentComment.Replies.Add(comment);
             }
@@ -231,6 +227,9 @@ public class ForumViewModel : ViewModelBase
         return new Comment
         {
             MessageId = comment.MessageId,
+            AuthorId = comment.AuthorId,
+            MovieId = comment.MovieId,
+            ParentCommentId = comment.ParentCommentId ?? comment.ParentComment?.MessageId,
             Content = comment.Content,
             CreatedAt = comment.CreatedAt,
             Author = comment.Author,

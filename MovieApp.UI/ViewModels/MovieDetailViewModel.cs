@@ -51,6 +51,11 @@ public class MovieDetailViewModel : ViewModelBase
     public event Action? NavigateBack;
 
     /// <summary>
+    /// Event raised when comments for the current movie were changed.
+    /// </summary>
+    public event Action<int>? CommentsChanged;
+
+    /// <summary>
     /// Initializes a new instance of <see cref="MovieDetailViewModel"/>.
     /// </summary>
     public MovieDetailViewModel(IReviewService reviewService, ICommentService commentService,
@@ -260,8 +265,7 @@ public class MovieDetailViewModel : ViewModelBase
         HasUserReview = reviews.Any(r => r.User?.UserId == _currentUserId);
 
         // Load comments
-        var comments = await _commentService.GetCommentsForMovie(movie.MovieId);
-        RebuildCommentTree(comments);
+        await RefreshCommentsAsync();
 
         // Load external reviews asynchronously
         _ = LoadExternalReviewsAsync(movie.Title);
@@ -358,8 +362,8 @@ public class MovieDetailViewModel : ViewModelBase
         {
             await _commentService.AddComment(_currentUserId, Movie.MovieId, NewCommentContent);
             NewCommentContent = string.Empty;
-            var comments = await _commentService.GetCommentsForMovie(Movie.MovieId);
-            RebuildCommentTree(comments);
+            await RefreshCommentsAsync();
+            CommentsChanged?.Invoke(Movie.MovieId);
         }
         catch (InvalidOperationException ex)
         {
@@ -379,13 +383,25 @@ public class MovieDetailViewModel : ViewModelBase
             await _commentService.AddReply(_currentUserId, ReplyToCommentId, ReplyContent);
             ReplyContent = string.Empty;
             ReplyToCommentId = 0;
-            var comments = await _commentService.GetCommentsForMovie(Movie.MovieId);
-            RebuildCommentTree(comments);
+            await RefreshCommentsAsync();
+            CommentsChanged?.Invoke(Movie.MovieId);
         }
         catch (InvalidOperationException ex)
         {
             StatusMessage = ex.Message;
         }
+    }
+
+    /// <summary>
+    /// Reloads only the comments for the current movie.
+    /// </summary>
+    public async Task RefreshCommentsAsync()
+    {
+        if (Movie == null)
+            return;
+
+        var comments = await _commentService.GetCommentsForMovie(Movie.MovieId);
+        RebuildCommentTree(comments);
     }
 
     private void RebuildCommentTree(IEnumerable<Comment> comments)
@@ -405,9 +421,9 @@ public class MovieDetailViewModel : ViewModelBase
 
         foreach (var comment in commentList)
         {
-            if (comment.ParentComment is not null &&
-                comment.ParentComment.MessageId is int parentId &&
-                commentsById.TryGetValue(parentId, out var parentComment))
+            var parentId = comment.ParentCommentId ?? comment.ParentComment?.MessageId;
+            if (parentId is int resolvedParentId &&
+                commentsById.TryGetValue(resolvedParentId, out var parentComment))
             {
                 parentComment.Replies.Add(comment);
             }
@@ -423,6 +439,9 @@ public class MovieDetailViewModel : ViewModelBase
         return new Comment
         {
             MessageId = comment.MessageId,
+            AuthorId = comment.AuthorId,
+            MovieId = comment.MovieId,
+            ParentCommentId = comment.ParentCommentId ?? comment.ParentComment?.MessageId,
             Content = comment.Content,
             CreatedAt = comment.CreatedAt,
             Author = comment.Author,
