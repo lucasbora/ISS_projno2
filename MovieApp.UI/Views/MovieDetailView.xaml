@@ -332,6 +332,7 @@
                              Text="{x:Bind ViewModel.NewCommentContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
+                             MaxLength="10000"
                              Margin="0,0,8,0"/>
                     <Button Grid.Column="1" Content="Post"
                             Command="{x:Bind ViewModel.AddCommentCommand}"
@@ -372,6 +373,7 @@
                                      Text="{x:Bind ViewModel.ReplyContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      AcceptsReturn="True"
                                      TextWrapping="Wrap"
+                                     MaxLength="10000"
                                      Margin="0,0,8,0"/>
                             <Button Grid.Column="1"
                                     Content="Send Reply"
