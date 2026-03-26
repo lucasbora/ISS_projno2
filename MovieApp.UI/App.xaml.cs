@@ -101,6 +101,7 @@ public partial class App : Application
         services.AddTransient<MovieDetailViewModel>();
         services.AddTransient<BattleViewModel>();
         services.AddTransient<ForumViewModel>();
+        services.AddTransient<ProfileViewModel>();
         services.AddTransient<MainWindowViewModel>();
     }
 
