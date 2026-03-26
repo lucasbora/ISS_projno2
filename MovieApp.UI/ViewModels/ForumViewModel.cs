@@ -38,6 +38,11 @@ public class ForumViewModel : ViewModelBase
             if (param is int commentId)
                 ReplyToCommentId = commentId;
         });
+        CancelReplyCommand = new RelayCommand(_ =>
+        {
+            ReplyContent = string.Empty;
+            ReplyToCommentId = 0;
+        });
         LoadMoviesCommand = new AsyncRelayCommand(async _ => await LoadMoviesAsync());
     }
 
@@ -102,6 +107,9 @@ public class ForumViewModel : ViewModelBase
 
     /// <summary>Gets the command to start a reply.</summary>
     public ICommand StartReplyCommand { get; }
+
+    /// <summary>Gets the command to cancel replying.</summary>
+    public ICommand CancelReplyCommand { get; }
 
     /// <summary>Gets the command to load movies.</summary>
     public ICommand LoadMoviesCommand { get; }

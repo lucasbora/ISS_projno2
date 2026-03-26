@@ -95,22 +95,38 @@
                 Visibility="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay, Converter={StaticResource IntToVisibility}}"
                 Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
                 CornerRadius="8" Padding="12" Margin="0,0,0,4">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0"
-                         PlaceholderText="Write your reply..."
-                         Text="{x:Bind ViewModel.ReplyContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         MaxLength="10000"
-                         Margin="0,0,8,0"/>
-                <Button Grid.Column="1" Content="Send Reply"
-                        Command="{x:Bind ViewModel.ReplyCommand}"
-                        Style="{ThemeResource AccentButtonStyle}"/>
-            </Grid>
+            <StackPanel>
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center">
+                        <Run Text="Replying to comment #"/>
+                        <Run Text="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay}"/>
+                    </TextBlock>
+                    <Button Grid.Column="1"
+                            Content="Cancel"
+                            Command="{x:Bind ViewModel.CancelReplyCommand}"/>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             PlaceholderText="Write your reply..."
+                             Text="{x:Bind ViewModel.ReplyContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             MaxLength="10000"
+                             Margin="0,0,8,0"/>
+                    <Button Grid.Column="1" Content="Send Reply"
+                            Command="{x:Bind ViewModel.ReplyCommand}"
+                            Style="{ThemeResource AccentButtonStyle}"/>
+                </Grid>
+            </StackPanel>
         </Border>
     </Grid>
 </UserControl>
