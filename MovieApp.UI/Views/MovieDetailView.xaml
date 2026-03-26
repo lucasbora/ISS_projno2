@@ -6,6 +6,41 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:MovieApp.Core.Models">
 
+    <UserControl.Resources>
+        <DataTemplate x:Key="MovieDetailCommentTemplate" x:DataType="models:Comment">
+            <StackPanel>
+                <Border Padding="12" Margin="0,2"
+                        CornerRadius="6"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock FontWeight="SemiBold" FontSize="13">
+                                <Run Text="User #"/>
+                                <Run Text="{x:Bind AuthorId}"/>
+                            </TextBlock>
+                            <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
+                                       HorizontalAlignment="Right"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </Grid>
+
+                        <TextBlock Text="{x:Bind Content}" TextWrapping="Wrap"
+                                   Margin="0,4,0,0"/>
+
+                        <Button Content="Reply"
+                                Tag="{x:Bind MessageId}"
+                                Click="ReplyButton_Click"
+                                HorizontalAlignment="Left"
+                                Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <ItemsControl ItemsSource="{x:Bind Replies}"
+                              ItemTemplate="{StaticResource MovieDetailCommentTemplate}"
+                              Margin="24,6,0,0"/>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="20">
         <ScrollViewer x:Name="MovieDetailScrollViewer" VerticalScrollBarVisibility="Auto">
             <StackPanel MaxWidth="900" HorizontalAlignment="Center">
@@ -303,39 +338,8 @@
                             Style="{ThemeResource AccentButtonStyle}"/>
                 </Grid>
 
-                <ItemsControl ItemsSource="{x:Bind ViewModel.Comments}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:Comment">
-                            <Border Padding="12" Margin="0,2"
-                                    CornerRadius="6"
-                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                <StackPanel>
-                                    <Grid>
-                                        <TextBlock FontWeight="SemiBold" FontSize="13">
-                                            <Run Text="User #"/>
-                                            <Run Text="{x:Bind AuthorId}"/>
-                                        </TextBlock>
-                                        <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
-                                                   HorizontalAlignment="Right"
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    </Grid>
-                                    <TextBlock Text="{x:Bind Content}" TextWrapping="Wrap"
-                                               Margin="0,4,0,0"/>
-                                    <TextBlock FontSize="11" Margin="0,2,0,0"
-                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}">
-                                        <Run Text="Reply to: #"/>
-                                        <Run Text="{x:Bind ParentCommentId}"/>
-                                    </TextBlock>
-                                    <Button Content="Reply"
-                                            Tag="{x:Bind MessageId}"
-                                            Click="ReplyButton_Click"
-                                            HorizontalAlignment="Left"
-                                            Margin="0,8,0,0"/>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <ItemsControl ItemsSource="{x:Bind ViewModel.RootComments}"
+                              ItemTemplate="{StaticResource MovieDetailCommentTemplate}"/>
 
                 <Border x:Name="ReplyEditorBorder"
                         Visibility="{x:Bind ViewModel.ReplyToCommentId, Mode=OneWay, Converter={StaticResource IntToVisibility}}"
