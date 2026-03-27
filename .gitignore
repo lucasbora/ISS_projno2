@@ -30,3 +30,7 @@ x86/
 build_output.txt
 build_errors.txt
 msbuild.log
+
+# Claude Code
+.claude/
+query
