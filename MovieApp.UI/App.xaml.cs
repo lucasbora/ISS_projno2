@@ -15,7 +15,8 @@ namespace MovieApp.UI;
 public partial class App : Application
 {
     private Window? _window;
-    private readonly string _connString = "Server=(localdb)\\mssqllocaldb;Database=MovieApp;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=2;";
+    private readonly string _connString = "Server=.\\SQLEXPRESS;Database=Movie_App;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=10;";
+    public static bool UsingMockData { get; private set; }
     private readonly string _mockDataPath;
     private readonly bool _useMockData;
 
@@ -30,6 +31,7 @@ public partial class App : Application
         this.InitializeComponent();
         _mockDataPath = Path.Combine(AppContext.BaseDirectory, "Data", "mock-data.json");
         _useMockData = !CanConnectToDatabase(_connString);
+        UsingMockData = _useMockData;
 
         // Configure services
         var serviceCollection = new ServiceCollection();
@@ -109,12 +111,15 @@ public partial class App : Application
     {
         try
         {
-            using var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString);
+            var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+            builder.InitialCatalog = "master";
+            using var connection = new Microsoft.Data.SqlClient.SqlConnection(builder.ConnectionString);
             connection.Open();
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"[DB CONNECTION FAILED] {ex.Message}");
             return false;
         }
     }

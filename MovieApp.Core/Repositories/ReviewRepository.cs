@@ -22,7 +22,7 @@ public class ReviewRepository
             SELECT ReviewId, UserId, MovieId, StarRating, Content, CreatedAt, IsExtraReview,
                    CinematographyRating, CinematographyText, ActingRating, ActingText,
                    CgiRating, CgiText, PlotRating, PlotText, SoundRating, SoundText
-            FROM Reviews", connection);
+            FROM Review", connection);
 
         connection.Open();
         using var reader = cmd.ExecuteReader();
@@ -41,7 +41,7 @@ public class ReviewRepository
             SELECT ReviewId, UserId, MovieId, StarRating, Content, CreatedAt, IsExtraReview,
                    CinematographyRating, CinematographyText, ActingRating, ActingText,
                    CgiRating, CgiText, PlotRating, PlotText, SoundRating, SoundText
-            FROM Reviews
+            FROM Review
             WHERE ReviewId = @id", connection);
 
         cmd.Parameters.AddWithValue("@id", id);
@@ -65,7 +65,7 @@ public class ReviewRepository
 
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            INSERT INTO Reviews (UserId, MovieId, StarRating, Content, CreatedAt, IsExtraReview,
+            INSERT INTO Review (UserId, MovieId, StarRating, Content, CreatedAt, IsExtraReview,
                                  CinematographyRating, CinematographyText, ActingRating, ActingText,
                                  CgiRating, CgiText, PlotRating, PlotText, SoundRating, SoundText)
             VALUES (@userId, @movieId, @starRating, @content, @createdAt, @isExtraReview,
@@ -79,15 +79,15 @@ public class ReviewRepository
         cmd.Parameters.AddWithValue("@content", review.Content);
         cmd.Parameters.AddWithValue("@createdAt", review.CreatedAt);
         cmd.Parameters.AddWithValue("@isExtraReview", review.IsExtraReview);
-        cmd.Parameters.AddWithValue("@cinematographyRating", review.CinematographyRating);
+        cmd.Parameters.AddWithValue("@cinematographyRating", review.CinematographyRating == 0 ? (object)DBNull.Value : review.CinematographyRating);
         cmd.Parameters.AddWithValue("@cinematographyText", (object?)review.CinematographyText ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@actingRating", review.ActingRating);
+        cmd.Parameters.AddWithValue("@actingRating", review.ActingRating == 0 ? (object)DBNull.Value : review.ActingRating);
         cmd.Parameters.AddWithValue("@actingText", (object?)review.ActingText ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@cgiRating", review.CgiRating);
+        cmd.Parameters.AddWithValue("@cgiRating", review.CgiRating == 0 ? (object)DBNull.Value : review.CgiRating);
         cmd.Parameters.AddWithValue("@cgiText", (object?)review.CgiText ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@plotRating", review.PlotRating);
+        cmd.Parameters.AddWithValue("@plotRating", review.PlotRating == 0 ? (object)DBNull.Value : review.PlotRating);
         cmd.Parameters.AddWithValue("@plotText", (object?)review.PlotText ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@soundRating", review.SoundRating);
+        cmd.Parameters.AddWithValue("@soundRating", review.SoundRating == 0 ? (object)DBNull.Value : review.SoundRating);
         cmd.Parameters.AddWithValue("@soundText", (object?)review.SoundText ?? DBNull.Value);
 
         connection.Open();
@@ -105,7 +105,7 @@ public class ReviewRepository
 
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            UPDATE Reviews
+            UPDATE Review
             SET UserId = @userId,
                 MovieId = @movieId,
                 StarRating = @starRating,
@@ -149,7 +149,7 @@ public class ReviewRepository
     public bool Delete(int id)
     {
         using var connection = new SqlConnection(_connectionString);
-        using var cmd = new SqlCommand("DELETE FROM Reviews WHERE ReviewId = @id", connection);
+        using var cmd = new SqlCommand("DELETE FROM Review WHERE ReviewId = @id", connection);
 
         cmd.Parameters.AddWithValue("@id", id);
 
@@ -166,23 +166,23 @@ public class ReviewRepository
             Content = reader.GetString(reader.GetOrdinal("Content")),
             CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt")),
             IsExtraReview = reader.GetBoolean(reader.GetOrdinal("IsExtraReview")),
-            CinematographyRating = reader.GetInt32(reader.GetOrdinal("CinematographyRating")),
+            CinematographyRating = reader.IsDBNull(reader.GetOrdinal("CinematographyRating")) ? 0 : reader.GetInt32(reader.GetOrdinal("CinematographyRating")),
             CinematographyText = reader.IsDBNull(reader.GetOrdinal("CinematographyText"))
                 ? null
                 : reader.GetString(reader.GetOrdinal("CinematographyText")),
-            ActingRating = reader.GetInt32(reader.GetOrdinal("ActingRating")),
+            ActingRating = reader.IsDBNull(reader.GetOrdinal("ActingRating")) ? 0 : reader.GetInt32(reader.GetOrdinal("ActingRating")),
             ActingText = reader.IsDBNull(reader.GetOrdinal("ActingText"))
                 ? null
                 : reader.GetString(reader.GetOrdinal("ActingText")),
-            CgiRating = reader.GetInt32(reader.GetOrdinal("CgiRating")),
+            CgiRating = reader.IsDBNull(reader.GetOrdinal("CgiRating")) ? 0 : reader.GetInt32(reader.GetOrdinal("CgiRating")),
             CgiText = reader.IsDBNull(reader.GetOrdinal("CgiText"))
                 ? null
                 : reader.GetString(reader.GetOrdinal("CgiText")),
-            PlotRating = reader.GetInt32(reader.GetOrdinal("PlotRating")),
+            PlotRating = reader.IsDBNull(reader.GetOrdinal("PlotRating")) ? 0 : reader.GetInt32(reader.GetOrdinal("PlotRating")),
             PlotText = reader.IsDBNull(reader.GetOrdinal("PlotText"))
                 ? null
                 : reader.GetString(reader.GetOrdinal("PlotText")),
-            SoundRating = reader.GetInt32(reader.GetOrdinal("SoundRating")),
+            SoundRating = reader.IsDBNull(reader.GetOrdinal("SoundRating")) ? 0 : reader.GetInt32(reader.GetOrdinal("SoundRating")),
             SoundText = reader.IsDBNull(reader.GetOrdinal("SoundText"))
                 ? null
                 : reader.GetString(reader.GetOrdinal("SoundText")),

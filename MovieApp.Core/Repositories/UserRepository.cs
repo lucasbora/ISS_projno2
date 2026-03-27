@@ -18,7 +18,7 @@ public class UserRepository
         var users = new List<User>();
 
         using var connection = new SqlConnection(_connectionString);
-        using var cmd = new SqlCommand("SELECT UserId FROM Users", connection);
+        using var cmd = new SqlCommand("SELECT UserId FROM [User]", connection);
 
         connection.Open();
         using var reader = cmd.ExecuteReader();
@@ -36,7 +36,7 @@ public class UserRepository
     public User? GetById(int id)
     {
         using var connection = new SqlConnection(_connectionString);
-        using var cmd = new SqlCommand("SELECT UserId FROM Users WHERE UserId = @id", connection);
+        using var cmd = new SqlCommand("SELECT UserId FROM [User] WHERE UserId = @id", connection);
 
         cmd.Parameters.AddWithValue("@id", id);
 
@@ -57,7 +57,7 @@ public class UserRepository
     {
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            INSERT INTO Users DEFAULT VALUES;
+            INSERT INTO [User] DEFAULT VALUES;
             SELECT CAST(SCOPE_IDENTITY() AS int);", connection);
 
         connection.Open();
@@ -70,7 +70,7 @@ public class UserRepository
     {
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            UPDATE Users
+            UPDATE [User]
             SET UserId = UserId
             WHERE UserId = @id", connection);
 
@@ -83,7 +83,7 @@ public class UserRepository
     public bool Delete(int id)
     {
         using var connection = new SqlConnection(_connectionString);
-        using var cmd = new SqlCommand("DELETE FROM Users WHERE UserId = @id", connection);
+        using var cmd = new SqlCommand("DELETE FROM [User] WHERE UserId = @id", connection);
 
         cmd.Parameters.AddWithValue("@id", id);
 

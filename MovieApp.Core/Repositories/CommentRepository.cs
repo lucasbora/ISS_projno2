@@ -20,7 +20,7 @@ public class CommentRepository
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
             SELECT MessageId, AuthorId, MovieId, ParentCommentId, Content, CreatedAt
-            FROM Comments", connection);
+            FROM Comment", connection);
 
         connection.Open();
         using var reader = cmd.ExecuteReader();
@@ -37,7 +37,7 @@ public class CommentRepository
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
             SELECT MessageId, AuthorId, MovieId, ParentCommentId, Content, CreatedAt
-            FROM Comments
+            FROM Comment
             WHERE MessageId = @id", connection);
 
         cmd.Parameters.AddWithValue("@id", id);
@@ -61,7 +61,7 @@ public class CommentRepository
 
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            INSERT INTO Comments (AuthorId, MovieId, ParentCommentId, Content, CreatedAt)
+            INSERT INTO Comment (AuthorId, MovieId, ParentCommentId, Content, CreatedAt)
             VALUES (@authorId, @movieId, @parentCommentId, @content, @createdAt);
             SELECT CAST(SCOPE_IDENTITY() AS int);", connection);
 
@@ -86,7 +86,7 @@ public class CommentRepository
 
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            UPDATE Comments
+            UPDATE Comment
             SET AuthorId = @authorId,
                 MovieId = @movieId,
                 ParentCommentId = @parentCommentId,
@@ -108,7 +108,7 @@ public class CommentRepository
     public bool Delete(int id)
     {
         using var connection = new SqlConnection(_connectionString);
-        using var cmd = new SqlCommand("DELETE FROM Comments WHERE MessageId = @id", connection);
+        using var cmd = new SqlCommand("DELETE FROM Comment WHERE MessageId = @id", connection);
 
         cmd.Parameters.AddWithValue("@id", id);
 

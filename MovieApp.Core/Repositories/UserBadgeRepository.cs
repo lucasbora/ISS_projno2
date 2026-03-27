@@ -20,7 +20,7 @@ public class UserBadgeRepository
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
             SELECT UserId, BadgeId
-            FROM UserBadges", connection);
+            FROM UserBadge", connection);
 
         connection.Open();
         using var reader = cmd.ExecuteReader();
@@ -37,7 +37,7 @@ public class UserBadgeRepository
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
             SELECT UserId, BadgeId
-            FROM UserBadges
+            FROM UserBadge
             WHERE UserId = @userId AND BadgeId = @badgeId", connection);
 
         cmd.Parameters.AddWithValue("@userId", userId);
@@ -62,7 +62,7 @@ public class UserBadgeRepository
 
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            INSERT INTO UserBadges (UserId, BadgeId)
+            INSERT INTO UserBadge (UserId, BadgeId)
             VALUES (@userId, @badgeId)", connection);
 
         cmd.Parameters.AddWithValue("@userId", userBadge.User.UserId);
@@ -81,7 +81,7 @@ public class UserBadgeRepository
 
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            UPDATE UserBadges
+            UPDATE UserBadge
             SET UserId = @userId,
                 BadgeId = @badgeId
             WHERE UserId = @userId AND BadgeId = @badgeId", connection);
@@ -97,7 +97,7 @@ public class UserBadgeRepository
     {
         using var connection = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand(@"
-            DELETE FROM UserBadges
+            DELETE FROM UserBadge
             WHERE UserId = @userId AND BadgeId = @badgeId", connection);
 
         cmd.Parameters.AddWithValue("@userId", userId);
