@@ -25,4 +25,12 @@ public interface IBattleService
 
     /// <summary>Distributes payouts to winning bettors.</summary>
     Task DistributePayouts(int battleId);
+
+    /// <summary>Settles any active battles whose end date has passed.</summary>
+    Task SettleExpiredBattlesAsync();
+
+    /// <summary>
+    /// Gets the active battle, or the most recent battle the user has bet on if no active battle exists.
+    /// </summary>
+    Task<Battle?> GetCurrentBattleForUser(int userId);
 }

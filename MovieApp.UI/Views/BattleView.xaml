@@ -95,10 +95,29 @@
                          Severity="Informational"
                          Margin="0,0,0,12"/>
 
-                <!-- Bet Section (only if battle exists and no bet placed) -->
+                <!-- Bet Section (only if battle exists) -->
                 <StackPanel Visibility="{x:Bind ViewModel.HasBattle, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+
+                    <!-- Battle ended notice -->
+                    <Border Visibility="{x:Bind ViewModel.IsBattleFinished, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="8" Padding="12,8" Margin="0,0,0,12"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="⏰ This battle has ended — results have been settled."
+                                   FontSize="13" HorizontalAlignment="Center"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </Border>
+
+                    <!-- Already bet notice -->
+                    <TextBlock Visibility="{x:Bind ViewModel.HasBet, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
+                               Text="✅ You've already placed a bet — only one bet is allowed per battle."
+                               FontSize="13" HorizontalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Margin="0,0,0,12"/>
+
                     <Button Content="🎲 Bet Now"
                             Command="{x:Bind ViewModel.ShowBetFormCommand}"
+                            Visibility="{x:Bind ViewModel.CanBet, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
                             Style="{ThemeResource AccentButtonStyle}"
                             HorizontalAlignment="Center"
                             Margin="0,0,0,12"

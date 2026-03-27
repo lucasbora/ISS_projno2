@@ -206,5 +206,57 @@ END;";
 
         using var seedCmd = new SqlCommand(seedSql, connection);
         seedCmd.ExecuteNonQuery();
+
+        // Always overwrite poster URLs with correct TMDB paths for known titles
+        var posterSql = @"
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg' WHERE Title = 'Interstellar';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg' WHERE Title = 'Parasite';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/7fn624j5lj3xTme2SgiLCeuedmO.jpg' WHERE Title = 'Whiplash';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/hN2Gpq8rySHC9M6CYsV4kr3WHUK.jpg' WHERE Title = 'Arrival';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/eaoLS0WK3ZHXFJlscP8fzeWqKON.jpg' WHERE Title = 'Everything Everywhere All at Once';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg' WHERE Title = 'Dune: Part Two';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/z4lzwl3Gff5IOWKGiYY7gUFYXUb.jpg' WHERE Title = 'The Godfather';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg' WHERE Title = 'Spirited Away';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg' WHERE Title = 'Oppenheimer';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/tFXcEccSQMf3lfhfXKSU9iRBpa3.jpg' WHERE Title = 'Get Out';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/uXdGffTsmhFIdTtBIlvJt0LWxsk.jpg' WHERE Title = 'Hereditary';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/iZf0KyrE25z1sage4SYFLCCrMi9.jpg' WHERE Title = '1917';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg' WHERE Title = 'The Shawshank Redemption';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg' WHERE Title = 'The Dark Knight';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg' WHERE Title = 'Inception';
+UPDATE Movie SET PosterUrl = 'https://image.tmdb.org/t/p/w500/fIE3lAGcZDV1G6XM5KmuWnNsPp1.jpg' WHERE Title = 'Pulp Fiction';
+
+-- Auto-create an active battle if none exists, picking two movies with ratings within 0.5 of each other
+IF NOT EXISTS (SELECT 1 FROM Battle WHERE Status = 1)
+BEGIN
+    DECLARE @FirstMovieId INT, @SecondMovieId INT,
+            @FirstRating FLOAT, @SecondRating FLOAT;
+
+    SELECT TOP 1
+        @FirstMovieId  = m1.MovieId,
+        @SecondMovieId = m2.MovieId,
+        @FirstRating   = m1.AverageRating,
+        @SecondRating  = m2.AverageRating
+    FROM Movie m1
+    CROSS JOIN Movie m2
+    WHERE m1.MovieId < m2.MovieId
+      AND ABS(m1.AverageRating - m2.AverageRating) <= 0.5
+    ORDER BY ABS(m1.AverageRating - m2.AverageRating), m1.MovieId;
+
+    IF @FirstMovieId IS NOT NULL AND @SecondMovieId IS NOT NULL
+    BEGIN
+        INSERT INTO Battle (FirstMovieId, SecondMovieId,
+                            InitialRatingFirstMovie, InitialRatingSecondMovie,
+                            StartDate, EndDate, Status)
+        VALUES (@FirstMovieId, @SecondMovieId,
+                @FirstRating, @SecondRating,
+                CAST(GETUTCDATE() AS DATE),
+                DATEADD(DAY, 6, CAST(GETUTCDATE() AS DATE)),
+                1);  -- 1 = Active
+    END
+END;";
+
+        using var patchCmd = new SqlCommand(posterSql, connection);
+        patchCmd.ExecuteNonQuery();
     }
 }
