@@ -95,8 +95,12 @@ public partial class App : Application
             services.AddScoped<ICommentService, CommentService>();
         }
 
-        // External review service (HttpClient singleton)
-        services.AddHttpClient<ExternalReviewService>();
+        // External review providers + cache + aggregator service
+        services.AddSingleton<ICacheService, LocalFileCacheService>();
+        services.AddHttpClient<IExternalReviewProvider, OmdbReviewProvider>();
+        services.AddHttpClient<IExternalReviewProvider, NytReviewProvider>();
+        services.AddHttpClient<IExternalReviewProvider, GuardianReviewProvider>();
+        services.AddTransient<ExternalReviewService>();
 
         // ViewModels
         services.AddTransient<CatalogViewModel>();
