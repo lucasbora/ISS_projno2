@@ -1,14 +1,13 @@
 # MovieApp — WinUI 3 Desktop Application
 
-A comprehensive movie catalog, review, battle, and discussion platform built with **WinUI 3**, **.NET 8**, and **Entity Framework Core 8**.
+A comprehensive movie catalog, review, battle, and discussion platform built with **WinUI 3**, **.NET 8**, and **ADO.NET** (raw SQL, no ORM).
 
 ## 📦 Project Structure
 
 ```
 MovieApp.sln
-├── MovieApp.Core        → Models, Services, Interfaces, DbContext
-├── MovieApp.UI          → WinUI 3 XAML Views + MVVM ViewModels
-└── MovieApp.Tests       → xUnit unit tests with Moq
+├── MovieApp.Core   → Models, Services, Interfaces, Repositories
+└── MovieApp.UI     → WinUI 3 XAML Views + MVVM ViewModels
 ```
 
 ## 🛠️ Prerequisites
@@ -16,8 +15,7 @@ MovieApp.sln
 - **Visual Studio 2022 (17.8+)** with:
   - .NET 8 SDK
   - Windows App SDK workload
-  - SQL Server Express LocalDB
-- **SQL Server LocalDB** (included with Visual Studio)
+- **SQL Server Express** installed and running
 
 ## 🚀 How to Run
 
@@ -29,21 +27,17 @@ Open `MovieApp.sln` in Visual Studio 2022.
 dotnet restore
 ```
 
-### 3. Create the Database
-The database is created automatically on first run via `EnsureCreatedAsync()`. The connection string uses LocalDB:
+### 3. Database Setup
+The app connects to SQL Server Express automatically. Tables and seed data are created on first run via a custom `DatabaseInitializer`. The connection string used is:
 ```
-Server=(localdb)\mssqllocaldb;Database=MovieAppDb;Trusted_Connection=True;
+Server=.\SQLEXPRESS;Database=Movie_App2;Trusted_Connection=True;TrustServerCertificate=True;
 ```
+If SQL Server Express is unavailable the app falls back to an in-memory mock data mode automatically.
 
 ### 4. Run the Application
 Set **MovieApp.UI** as the startup project, then press **F5** or:
 ```bash
 dotnet run --project MovieApp.UI
-```
-
-### 5. Run Tests
-```bash
-dotnet test MovieApp.Tests
 ```
 
 ## 📋 Features
@@ -57,41 +51,35 @@ dotnet test MovieApp.Tests
 - Add star ratings (0–5, 0.5 increments)
 - Submit extended reviews with 5 categories (Cinematography, Acting, CGI, Plot, Sound)
 - One review per user per movie enforced
+- Minimum 50 characters, maximum 2000 characters
 
 ### ⚔️ Battle Arena
 - Weekly movie battles between similarly-rated films
-- Place bets with earned points
+- Place bets with earned points (one bet per battle)
 - Winners determined by rating improvement over the week
+- Battle and bet results visible even after the battle ends
 
 ### 💬 Forum
 - Threaded comment discussions per movie
 - Reply to existing comments
-- Max 10,000 character comments
+- Maximum 10,000 characters per comment
 
 ### 🏆 Points & Badges
 - Earn points for reviewing movies
-- Six achievement badges (The Snob, The Super Serious, The Joker, Godfather I/II/III)
+- Six achievement badges: The Snob, The Super Serious, The Joker, The Godfather I/II/III
 
 ### 🎭 External Reviews
-- Mock critic reviews (NYT, Guardian, OMDb)
-- Aggregate critic/audience scores
-- Lexicon analysis and polarization detection
-
-## 🧪 Test Coverage
-
-| Service | Test Cases |
-|---------|-----------|
-| ReviewService | Add review, duplicate check, invalid rating, average update |
-| PointService | +2/+1/+5 scoring rules, freeze points validation |
-| BattleService | Rating diff validation, duplicate bet, winner determination |
-| BadgeService | Badge awarding, duplicate prevention |
+- Critic reviews fetched from NYT, Guardian, and OMDb APIs
+- Results cached locally to avoid redundant API calls
+- Aggregate critic and audience scores per movie
 
 ## 🏗️ Architecture
 
-- **MVVM Pattern** — Views, ViewModels, Models cleanly separated
+- **MVVM Pattern** — Views, ViewModels, and Models cleanly separated
 - **Dependency Injection** — All services registered in `App.xaml.cs`
-- **Async/Await** — All database operations are async
-- **Entity Framework Core 8** — Code-first with SQL Server LocalDB
+- **ADO.NET Repositories** — Raw SQL queries, no ORM
+- **Async/Await** — All database and API operations are async
+- **Automatic DB Fallback** — Falls back to mock data if SQL Server Express is unreachable
 - **Hard-coded User** — UserId = 1 (no authentication required)
 
 ## 📝 Database Schema
