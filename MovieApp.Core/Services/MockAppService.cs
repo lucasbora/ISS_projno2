@@ -424,6 +424,40 @@ public sealed class MockAppService : ICatalogService, IReviewService, ICommentSe
         }
     }
 
+    public Task<Battle?> GetCurrentBattleForUser(int userId)
+    {
+        lock (_sync)
+        {
+            // Return active battle if one exists
+            var active = BuildBattles().FirstOrDefault(b => b.Status == "Active");
+            if (active != null)
+                return Task.FromResult<Battle?>(active);
+
+            // No active battle — show the most recent battle regardless
+            var recentBattle = _data.Battles
+                .OrderByDescending(b => b.EndDate)
+                .Select(BuildBattle)
+                .FirstOrDefault();
+
+            return Task.FromResult<Battle?>(recentBattle);
+        }
+    }
+
+    public async Task SettleExpiredBattlesAsync()
+    {
+        var today = DateTime.UtcNow.Date;
+        List<int> expiredIds;
+        lock (_sync)
+        {
+            expiredIds = _data.Battles
+                .Where(b => b.Status == "Active" && b.EndDate < today)
+                .Select(b => b.BattleId)
+                .ToList();
+        }
+        foreach (var id in expiredIds)
+            await DistributePayouts(id);
+    }
+
     public Task<UserStats> GetUserStats(int userId)
     {
         lock (_sync)

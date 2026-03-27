@@ -47,6 +47,14 @@ public class BattleService : IBattleService
         var battle = _battleRepository.GetAll()
             .FirstOrDefault(b => b.Status == "Active");
 
+        if (battle != null)
+        {
+            if (battle.FirstMovie != null)
+                battle.FirstMovie = _movieRepository.GetById(battle.FirstMovie.MovieId) ?? battle.FirstMovie;
+            if (battle.SecondMovie != null)
+                battle.SecondMovie = _movieRepository.GetById(battle.SecondMovie.MovieId) ?? battle.SecondMovie;
+        }
+
         return await Task.FromResult(battle);
     }
 
@@ -166,12 +174,57 @@ public class BattleService : IBattleService
         var battle = _battleRepository.GetById(battleId)
             ?? throw new InvalidOperationException("Battle not found.");
 
+        if (battle.FirstMovie != null)
+            battle.FirstMovie = _movieRepository.GetById(battle.FirstMovie.MovieId) ?? battle.FirstMovie;
+        if (battle.SecondMovie != null)
+            battle.SecondMovie = _movieRepository.GetById(battle.SecondMovie.MovieId) ?? battle.SecondMovie;
+
         double firstImprovement = (battle.FirstMovie?.AverageRating ?? 0) - battle.InitialRatingFirstMovie;
         double secondImprovement = (battle.SecondMovie?.AverageRating ?? 0) - battle.InitialRatingSecondMovie;
 
         return firstImprovement >= secondImprovement
             ? (battle.FirstMovie?.MovieId ?? 0)
             : (battle.SecondMovie?.MovieId ?? 0);
+    }
+
+    /// <summary>
+    /// Gets the active battle, or the most recent battle the user has bet on if no active battle exists.
+    /// </summary>
+    public async Task<Battle?> GetCurrentBattleForUser(int userId)
+    {
+        var active = await GetActiveBattle();
+        if (active != null)
+            return active;
+
+        // No active battle — show the most recent battle (so users can always see the last matchup)
+        var recentBattle = _battleRepository.GetAll()
+            .OrderByDescending(b => b.EndDate)
+            .FirstOrDefault();
+
+        if (recentBattle != null)
+        {
+            if (recentBattle.FirstMovie != null)
+                recentBattle.FirstMovie = _movieRepository.GetById(recentBattle.FirstMovie.MovieId) ?? recentBattle.FirstMovie;
+            if (recentBattle.SecondMovie != null)
+                recentBattle.SecondMovie = _movieRepository.GetById(recentBattle.SecondMovie.MovieId) ?? recentBattle.SecondMovie;
+        }
+
+        return recentBattle;
+    }
+
+    /// <summary>
+    /// Settles any active battles whose end date has already passed.
+    /// Called on startup so points are always returned after a week ends.
+    /// </summary>
+    public async Task SettleExpiredBattlesAsync()
+    {
+        var today = DateTime.UtcNow.Date;
+        var expired = _battleRepository.GetAll()
+            .Where(b => b.Status == "Active" && b.EndDate < today)
+            .ToList();
+
+        foreach (var battle in expired)
+            await DistributePayouts(battle.BattleId);
     }
 
     /// <summary>

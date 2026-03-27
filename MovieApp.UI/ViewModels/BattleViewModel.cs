@@ -17,6 +17,7 @@ public class BattleViewModel : ViewModelBase
 
     private Battle? _activeBattle;
     private bool _hasBattle;
+    private bool _isBattleActive;
     private bool _showBetForm;
     private int _betAmount;
     private int _selectedBetMovieId;
@@ -53,8 +54,32 @@ public class BattleViewModel : ViewModelBase
     public bool HasBattle
     {
         get => _hasBattle;
-        set => SetProperty(ref _hasBattle, value);
+        set
+        {
+            if (SetProperty(ref _hasBattle, value))
+                OnPropertyChanged(nameof(IsBattleFinished));
+        }
     }
+
+    /// <summary>Gets or sets whether the current battle is still active (not finished).</summary>
+    public bool IsBattleActive
+    {
+        get => _isBattleActive;
+        set
+        {
+            if (SetProperty(ref _isBattleActive, value))
+            {
+                OnPropertyChanged(nameof(CanBet));
+                OnPropertyChanged(nameof(IsBattleFinished));
+            }
+        }
+    }
+
+    /// <summary>Gets whether the user can place a bet (battle is active and no bet placed yet).</summary>
+    public bool CanBet => IsBattleActive && !HasBet;
+
+    /// <summary>Gets whether a finished battle is being displayed (user has a bet on it).</summary>
+    public bool IsBattleFinished => HasBattle && !IsBattleActive;
 
     /// <summary>Gets or sets whether to show the bet form.</summary>
     public bool ShowBetForm
@@ -102,7 +127,11 @@ public class BattleViewModel : ViewModelBase
     public bool HasBet
     {
         get => _hasBet;
-        set => SetProperty(ref _hasBet, value);
+        set
+        {
+            if (SetProperty(ref _hasBet, value))
+                OnPropertyChanged(nameof(CanBet));
+        }
     }
 
     /// <summary>Gets the command to load the active battle.</summary>
@@ -117,16 +146,25 @@ public class BattleViewModel : ViewModelBase
     /// <summary>
     /// Loads the active battle and user's points.
     /// </summary>
-    public async Task LoadBattleAsync()
+    /// <param name="settleExpired">
+    /// When true (default), expired battles are settled first.
+    /// Pass false after a bet placement so an already-expired battle in the DB
+    /// doesn't get settled mid-session, making the movie cards disappear.
+    /// </param>
+    public async Task LoadBattleAsync(bool settleExpired = true)
     {
         StatusMessage = string.Empty;
         ShowBetForm = false;
 
+        if (settleExpired)
+            await _battleService.SettleExpiredBattlesAsync();
+
         var stats = await _pointService.GetUserStats(_currentUserId);
         TotalPoints = stats.TotalPoints;
 
-        ActiveBattle = await _battleService.GetActiveBattle();
+        ActiveBattle = await _battleService.GetCurrentBattleForUser(_currentUserId);
         HasBattle = ActiveBattle != null;
+        IsBattleActive = ActiveBattle?.Status == "Active";
 
         if (ActiveBattle != null)
         {
@@ -157,7 +195,7 @@ public class BattleViewModel : ViewModelBase
             await _battleService.PlaceBet(_currentUserId, ActiveBattle.BattleId, SelectedBetMovieId, BetAmount);
             StatusMessage = $"Bet of {BetAmount} points placed successfully!";
             ShowBetForm = false;
-            await LoadBattleAsync();
+            await LoadBattleAsync(settleExpired: false);
         }
         catch (InvalidOperationException ex)
         {
