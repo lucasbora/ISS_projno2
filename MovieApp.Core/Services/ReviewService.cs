@@ -46,7 +46,7 @@ public class ReviewService : IReviewService
     public async Task<List<Review>> GetReviewsForMovie(int movieId)
     {
         var reviews = _reviewRepository.GetAll()
-            .Where(r => r.Movie?.MovieId == movieId)
+            .Where(r => r.Movie?.MovieId == movieId && r.StarRating <= 5)
             .OrderByDescending(r => r.CreatedAt)
             .ToList();
 
@@ -82,9 +82,6 @@ public class ReviewService : IReviewService
         // Validate content length
         if (!string.IsNullOrEmpty(content) && content.Length > 2000)
             throw new InvalidOperationException("Review content must not exceed 2000 characters.");
-
-        if(!string.IsNullOrEmpty(content) && content.Length < 50)
-            throw new InvalidOperationException("Review content must be at least 50 characters long.");
 
 
         var review = new Review
@@ -129,9 +126,6 @@ public class ReviewService : IReviewService
 
         if (!string.IsNullOrEmpty(content) && content.Length > 2000)
             throw new InvalidOperationException("Review content must not exceed 2000 characters.");
-
-        if (!string.IsNullOrEmpty(content) && content.Length < 50)
-            throw new InvalidOperationException("Review content must be at least 50 characters long.");
 
         review.StarRating = rating;
         review.Content = content;
@@ -224,7 +218,7 @@ public class ReviewService : IReviewService
     public async Task<double> GetAverageRating(int movieId)
     {
         var reviews = _reviewRepository.GetAll()
-            .Where(r => r.Movie?.MovieId == movieId)
+            .Where(r => r.Movie?.MovieId == movieId && r.StarRating <= 5)
             .ToList();
 
         if (reviews.Count == 0)

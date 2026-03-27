@@ -77,10 +77,10 @@ public class MainWindowViewModel : ViewModelBase
     /// </summary>
     private async Task LoadDataAsync()
     {
-        await _catalogViewModel.LoadMoviesAsync();
-        await _battleViewModel.LoadBattleAsync();
-        await _forumViewModel.LoadMoviesAsync();
-        await _profileViewModel.LoadProfileAsync();
+        try { await _catalogViewModel.LoadMoviesAsync(); } catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[Catalog load error] {ex.Message}"); }
+        try { await _battleViewModel.LoadBattleAsync(); } catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[Battle load error] {ex.Message}"); }
+        try { await _forumViewModel.LoadMoviesAsync(); } catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[Forum load error] {ex.Message}"); }
+        try { await _profileViewModel.LoadProfileAsync(); } catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[Profile load error] {ex.Message}"); }
     }
 
     /// <summary>
@@ -94,9 +94,11 @@ public class MainWindowViewModel : ViewModelBase
 
     /// <summary>
     /// Handles navigation back from movie detail to catalog.
+    /// Reloads catalog so updated average ratings are reflected immediately.
     /// </summary>
     private void OnNavigateBack()
     {
         ShowMovieDetail = false;
+        _ = _catalogViewModel.LoadMoviesAsync();
     }
 }

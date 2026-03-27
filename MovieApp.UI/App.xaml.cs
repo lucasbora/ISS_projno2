@@ -15,7 +15,7 @@ namespace MovieApp.UI;
 public partial class App : Application
 {
     private Window? _window;
-    private readonly string _connString = "Server=.\\SQLEXPRESS;Database=Movie_App;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=10;";
+    private readonly string _connString = "Server=.\\SQLEXPRESS;Database=Movie_App2;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=10;";
     public static bool UsingMockData { get; private set; }
     private readonly string _mockDataPath;
     private readonly bool _useMockData;

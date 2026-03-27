@@ -62,7 +62,7 @@ public class PointService : IPointService
 
     /// <summary>
     /// Adds points based on movie rating and battle status.
-    /// +2 if movie avg > 3.5, +1 if movie avg &lt; 2.0, +5 if isBattleMovie.
+    /// +2 if movie avg &gt; 3.5, +1 if movie avg &lt; 2.0, +5 if isBattleMovie.
     /// </summary>
     /// <param name="userId">The user identifier.</param>
     /// <param name="movieId">The movie identifier.</param>

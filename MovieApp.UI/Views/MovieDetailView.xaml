@@ -368,34 +368,8 @@
 						</Grid>
 					</StackPanel>
 				</Border>
-                <ItemsControl ItemsSource="{x:Bind ViewModel.Comments}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:Comment">
-                            <Border Padding="12" Margin="0,2"
-                                    CornerRadius="6"
-                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                <StackPanel>
-                                    <Grid>
-                                        <TextBlock FontWeight="SemiBold" FontSize="13">
-                                            <Run Text="User #"/>
-                                             <Run Text="{x:Bind AuthorDisplayId}"/>
-                                        </TextBlock>
-                                        <TextBlock Text="{x:Bind CreatedAt}" FontSize="11"
-                                                   HorizontalAlignment="Right"
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    </Grid>
-                                    <TextBlock Text="{x:Bind Content}" TextWrapping="Wrap"
-                                               Margin="0,4,0,0"/>
-                                    <TextBlock FontSize="11" Margin="0,2,0,0"
-                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}">
-                                        <Run Text="Reply to: #"/>
-                                         <Run Text="{x:Bind ParentCommentDisplayId}"/>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <ItemsControl ItemsSource="{x:Bind ViewModel.RootComments}"
+                              ItemTemplate="{StaticResource MovieDetailCommentTemplate}"/>
             </StackPanel>
         </ScrollViewer>
     </Grid>

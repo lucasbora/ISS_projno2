@@ -18,6 +18,7 @@ public class ForumViewModel : ViewModelBase
     private string _newCommentContent = string.Empty;
     private string _statusMessage = string.Empty;
     private int _selectedMovieId;
+    private Movie? _selectedMovie;
     private int _replyToCommentId;
     private string _replyContent = string.Empty;
 
@@ -67,6 +68,19 @@ public class ForumViewModel : ViewModelBase
     {
         get => _statusMessage;
         set => SetProperty(ref _statusMessage, value);
+    }
+
+    /// <summary>Gets or sets the selected movie (drives ComboBox selection).</summary>
+    public Movie? SelectedMovie
+    {
+        get => _selectedMovie;
+        set
+        {
+            if (SetProperty(ref _selectedMovie, value))
+            {
+                SelectedMovieId = value?.MovieId ?? 0;
+            }
+        }
     }
 
     /// <summary>Gets or sets the selected movie ID for viewing comments.</summary>
@@ -125,7 +139,7 @@ public class ForumViewModel : ViewModelBase
             Movies.Add(movie);
 
         if (Movies.Count > 0 && SelectedMovieId == 0)
-            SelectedMovieId = Movies[0].MovieId;
+            SelectedMovie = Movies[0];
     }
 
     /// <summary>
@@ -136,15 +150,7 @@ public class ForumViewModel : ViewModelBase
         if (SelectedMovieId <= 0) return;
 
         var comments = await _commentService.GetCommentsForMovie(SelectedMovieId);
-        Comments.Clear();
-        RootComments.Clear();
-
-        foreach (var comment in comments)
-        {
-            Comments.Add(comment);
-            if (comment.ParentComment == null)
-                RootComments.Add(comment);
-        }
+        RebuildCommentTree(comments);
     }
 
     /// <summary>

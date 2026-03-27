@@ -24,17 +24,6 @@ public sealed partial class ForumView : UserControl
     }
 
     /// <summary>
-    /// Handles movie selection in the forum ComboBox.
-    /// </summary>
-    private void ForumMovieSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (ForumMovieSelector.SelectedItem is Movie movie && ViewModel != null)
-        {
-            ViewModel.SelectedMovieId = movie.MovieId;
-        }
-    }
-
-    /// <summary>
     /// Handles reply button click on a comment.
     /// </summary>
     private void ReplyButton_Click(object sender, RoutedEventArgs e)
